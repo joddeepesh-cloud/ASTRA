@@ -1,0 +1,82 @@
+export interface HealthResponse {
+  status: string;
+  service: string;
+  ml_ready: boolean;
+  model_loaded: boolean;
+  domain_gate_loaded: boolean;
+  semantic_gate_loaded?: boolean;
+  model_version: string;
+  domain_gate_model_version: string;
+  semantic_gate_model_version?: string;
+  device: string;
+  backend_version: string;
+  startup_duration_ms: number;
+}
+
+export type DomainDecision = 'COMPATIBLE' | 'UNCERTAIN' | 'INCOMPATIBLE';
+
+export interface DomainValidation {
+  probability_astronomical: number;
+  probability_non_astronomical: number;
+  decision: DomainDecision;
+  model_version: string;
+  inference_time_ms: number;
+  semantic_gate_status?: 'SEMANTIC_COMPATIBLE' | 'SEMANTIC_UNCERTAIN' | 'SEMANTIC_INCOMPATIBLE';
+  semantic_astronomical_score?: number;
+  semantic_competing_score?: number;
+  semantic_margin?: number;
+  semantic_reason?: string;
+}
+
+export interface ClassProbabilities {
+  SMOOTH: number;
+  EDGE_ON: number;
+  FEATURED_DISK: number;
+  SPIRAL: number;
+  [key: string]: number;
+}
+
+export interface ScientificAttributes {
+  prob_smooth: number;
+  prob_features: number;
+  prob_edgeon: number;
+  prob_spiral: number;
+  prob_bar: number;
+  prob_odd: number;
+  [key: string]: number;
+}
+
+export interface TriageResponse {
+  domain_validation: DomainValidation;
+  predicted_class?: 'SMOOTH' | 'EDGE_ON' | 'FEATURED_DISK' | 'SPIRAL' | null;
+  class_confidence?: number | null;
+  class_probabilities?: ClassProbabilities | null;
+  scientific_attributes?: ScientificAttributes | null;
+  raw_embedding_distance?: number | null;
+  raw_pred_class_distance?: number | null;
+  nearest_reference_class?: string | null;
+  novelty_score?: number | null;
+  classification_entropy_bits?: number | null;
+  uncertainty_score?: number | null;
+  oddity_score?: number | null;
+  experimental_triage_score?: number | null;
+  priority_level?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | null;
+  explanation: string;
+  model_version: string;
+  inference_time_ms: number;
+  total_triage_ms: number;
+  score_interpretation: string;
+}
+
+export interface ApiErrorResponse {
+  error: string;
+  message: string;
+}
+
+export type DomainValidationStatus = 'not_implemented' | 'compatible' | 'incompatible' | 'uncertain';
+
+export interface DomainValidationGate {
+  compatible: boolean | null;
+  status: DomainValidationStatus;
+  message: string;
+}

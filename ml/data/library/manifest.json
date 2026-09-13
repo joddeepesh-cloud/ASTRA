@@ -1,0 +1,17 @@
+{
+  "dataset_name": "ASTRA Scientific Observation Library",
+  "total_records": 2000,
+  "classes": {
+    "SMOOTH": 500,
+    "EDGE_ON": 500,
+    "FEATURED_DISK": 500,
+    "SPIRAL": 500
+  },
+  "confidence_distribution": {
+    ">=90%": 462,
+    "80-90%": 382,
+    "<80%": 1156
+  },
+  "source": "Galaxy Zoo 2 Archive-Compatible 10k Subset",
+  "provenance": "SDSS DR7 / Galaxy Zoo 2"
+}

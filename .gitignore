@@ -1,0 +1,79 @@
+# Python
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Trashes
+
+# Node.js / Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ML Datasets (Ignore raw/processed/splits content except .gitkeep)
+ml/data/raw/*
+!ml/data/raw/.gitkeep
+ml/data/processed/*
+!ml/data/processed/.gitkeep
+ml/data/splits/*
+!ml/data/splits/.gitkeep
+*.fits
+*.fits.fz
+*.h5
+*.hdf5
+*.tar
+*.tar.gz
+*.zip
+
+# ML Model Checkpoints & Large Artifacts
+ml/models/*
+!ml/models/.gitkeep
+*.pth
+*.pt
+*.bin
+*.onnx
+*.safetensors
+*.ckpt
+
+# Generated Embeddings & Artifacts
+ml/artifacts/*
+!ml/artifacts/.gitkeep
+*.pkl
+*.joblib
+*.npz
+*.npy
+
+# Environment Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.key
+*.pem
+secrets/
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
