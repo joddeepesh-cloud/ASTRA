@@ -4,10 +4,25 @@ export type BroadMorphology = 'SMOOTH' | 'EDGE_ON' | 'FEATURED_DISK' | 'SPIRAL' 
 export type ObjectType = 'Galaxy' | 'Star' | 'Quasar' | 'Unknown';
 export type PriorityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type CatalogMatchStatus = 'MATCHED' | 'WEAK_MATCH' | 'NO_MATCH' | 'UNCHECKED';
-export type ActiveTab = 'landing' | 'overview' | 'observations' | 'anomalies' | 'library' | 'detail' | 'research' | 'copilot';
+export type ActiveTab = 'landing' | 'briefing' | 'observations' | 'anomalies' | 'library' | 'detail' | 'research' | 'copilot' | 'history';
+
+export interface AnalysisHistoryRecord {
+  id: string; // e.g. "HIST-20260913-001"
+  timestamp: string; // ISO string
+  source: 'SIMULATION_STREAM' | 'RESEARCH_UPLOAD' | 'SURVEY_INGEST';
+  observation_id: string;
+  filename: string;
+  domain_status: 'COMPATIBLE' | 'UNCERTAIN' | 'INCOMPATIBLE';
+  morphology: string;
+  confidence: number; // 0.0 - 1.0
+  triage_score: number; // 0.0 - 1.0
+  priority: PriorityLevel;
+  status: 'COMPLETED' | 'FLAGGED_FOR_REVIEW' | 'REJECTED';
+  is_demo: boolean;
+}
 
 export interface Observation {
-  id: string; // e.g. "OBS-004271" or "LIB-000001" or "LIVE-20260912-010500"
+  id: string; // e.g. "LIB-000001" or "LIVE-20260912-010500"
   dr7objid: string;
   asset_id: number;
   ra: number;

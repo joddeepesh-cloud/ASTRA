@@ -6,9 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.app.config import settings
-from backend.app.schemas import HealthResponse, TriageResponse, ErrorResponse
+from backend.app.schemas import HealthResponse, TriageResponse, ErrorResponse, SpaceAIRequest, SpaceAIResponse
 from backend.app.services.ml_service import ml_service, MLService
-from backend.app.dependencies import get_ml_service
+from backend.app.services.space_ai_service import SpaceAIService
+from backend.app.dependencies import get_ml_service, get_space_ai_service
 
 # Configure lightweight structured logging
 logging.basicConfig(
@@ -100,10 +101,6 @@ async def analyze_triage(
     """
     Process single uploaded observation through the production Galaxy Zoo Multi-Head CNN
     and ASTRA Scientific Triage Engine.
-    
-    Returns morphology classification probabilities, continuous scientific attributes,
-    embedding novelty, classification uncertainty, scientific oddity score, priority level,
-    and a deterministic scientific explanation.
     """
     t0 = time.perf_counter()
 
@@ -159,3 +156,42 @@ async def analyze_triage(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": "inference_failure", "message": "An unexpected error occurred during scientific triage analysis."}
         )
+
+@app.post(
+    f"{settings.API_V1_STR}/space-ai",
+    response_model=SpaceAIResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid question format"},
+        500: {"model": ErrorResponse, "description": "Unexpected Space Help AI processing error"}
+    },
+    tags=["Space Help AI"],
+    summary="Ask ASTRA Space Help AI a specialized astronomy or observation question"
+)
+async def ask_space_ai(
+    request: SpaceAIRequest,
+    space_ai: SpaceAIService = Depends(get_space_ai_service)
+):
+    """
+    ASTRA Space Help AI specialized astronomy assistant endpoint.
+    Processes general astronomy and observation-specific questions using structured
+    observation context payloads, off-topic guardrails, and LLM providers.
+    """
+    try:
+        res = space_ai.answer_question(
+            question=request.question,
+            observation_context=request.observation_context,
+            conversation_history=request.conversation_history,
+            image_base64=request.image_base64
+        )
+        return SpaceAIResponse(**res)
+    except Exception as e:
+        logger.error(f"Error processing Space AI request: {e}", exc_info=True)
+        return SpaceAIResponse(
+            answer="ASTRA Space Help AI encountered an unexpected processing error. Please try again shortly.",
+            scope="error",
+            observation_id=request.observation_context.get("observation_id") if request.observation_context else None,
+            grounded=False,
+            available=False,
+            error=str(e)
+        )
+

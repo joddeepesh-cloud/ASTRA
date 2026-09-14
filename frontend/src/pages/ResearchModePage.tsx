@@ -16,7 +16,7 @@ export const ResearchModePage: React.FC<ResearchModePageProps> = ({ onInspectRes
           <h1 className="text-2xl font-bold font-mono text-white tracking-wider">
             RESEARCH & EXPERIMENTAL UPLOAD MODE
           </h1>
-          <span className="text-xs font-mono bg-cyan-950/40 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded">
+          <span className="text-xs font-mono bg-[#151B23] text-[#D5DAE0] border border-[#252D37] px-2 py-0.5 rounded">
             ASTRA LABS
           </span>
         </div>
@@ -31,7 +31,7 @@ export const ResearchModePage: React.FC<ResearchModePageProps> = ({ onInspectRes
       {/* Technical Specifications */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
         <div className="glass-panel p-5 rounded-xl border border-slate-800 space-y-2">
-          <div className="flex items-center gap-2 text-cyan-400 font-mono text-xs font-bold">
+          <div className="flex items-center gap-2 text-[#8FAFC2] font-mono text-xs font-bold">
             <Cpu className="w-4 h-4" /> ONBOARD FEATURE MANIFOLD
           </div>
           <p className="text-xs text-slate-400 font-sans leading-relaxed">

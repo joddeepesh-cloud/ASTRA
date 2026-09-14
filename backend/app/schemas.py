@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Any
 
 class DomainValidation(BaseModel):
     probability_astronomical: float = Field(..., json_schema_extra={"example": 0.9985})
@@ -54,3 +54,19 @@ class TriageResponse(BaseModel):
 class ErrorResponse(BaseModel):
     error: str = Field(..., json_schema_extra={"example": "invalid_image"})
     message: str = Field(..., json_schema_extra={"example": "The uploaded file could not be decoded as a valid image."})
+
+class SpaceAIRequest(BaseModel):
+    question: str = Field(..., min_length=1, max_length=1000, json_schema_extra={"example": "Why is this classified as a spiral galaxy?"})
+    observation_context: Optional[Dict[str, Any]] = Field(default=None, json_schema_extra={"example": {"observation_id": "LIB-000001", "broad_morphology": "SPIRAL", "confidence": 0.83}})
+    conversation_history: Optional[List[Dict[str, str]]] = Field(default=None)
+    image_base64: Optional[str] = Field(default=None, description="Optional base64 encoded image string for multimodal vision support")
+
+class SpaceAIResponse(BaseModel):
+    answer: str = Field(..., json_schema_extra={"example": "Target LIB-000001 is classified as a spiral galaxy with 83% confidence based on visible curved arm structures."})
+    scope: str = Field(..., json_schema_extra={"example": "observation"})
+    observation_id: Optional[str] = Field(default=None, json_schema_extra={"example": "LIB-000001"})
+    grounded: bool = Field(default=True)
+    available: bool = Field(default=True)
+    model: str = Field(default="ASTRA Space AI")
+    provider: str = Field(default="ASTRA System")
+    error: Optional[str] = Field(default=None)

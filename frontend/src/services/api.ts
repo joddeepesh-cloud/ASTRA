@@ -1,4 +1,4 @@
-import type { HealthResponse, TriageResponse, ApiErrorResponse } from '../types/api';
+import type { HealthResponse, TriageResponse, ApiErrorResponse, SpaceAIRequest, SpaceAIResponse } from '../types/api';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
@@ -104,3 +104,65 @@ export async function triageImage(file: File, externalSignal?: AbortSignal): Pro
     );
   }
 }
+
+/**
+ * Submit question to ASTRA Space Help AI backend endpoint.
+ */
+export async function askSpaceAI(
+  input: SpaceAIRequest | string,
+  obsContextOrSignal?: Record<string, any> | AbortSignal,
+  externalSignal?: AbortSignal
+): Promise<SpaceAIResponse> {
+  let reqPayload: SpaceAIRequest;
+  let signalToUse: AbortSignal | undefined;
+
+  if (typeof input === 'string') {
+    reqPayload = {
+      question: input,
+      observation_context: (obsContextOrSignal && !('aborted' in obsContextOrSignal)) ? obsContextOrSignal : null,
+    };
+    signalToUse = externalSignal || (obsContextOrSignal && ('aborted' in obsContextOrSignal) ? (obsContextOrSignal as AbortSignal) : undefined);
+  } else {
+    reqPayload = input;
+    signalToUse = (obsContextOrSignal && ('aborted' in obsContextOrSignal)) ? (obsContextOrSignal as AbortSignal) : externalSignal;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/space-ai`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(reqPayload),
+      signal: signalToUse || controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new ApiError(`Space AI request failed with status ${response.status}`, 'space_ai_error', response.status);
+    }
+
+    const data: SpaceAIResponse = await response.json();
+    return data;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new ApiError('Space Help AI request timed out.', 'timeout', 408);
+    }
+    if (err instanceof ApiError) {
+      throw err;
+    }
+    throw new ApiError(err.message || 'Space Help AI service is currently unreachable.', 'network_error', 0);
+  }
+}
+
+/**
+ * Alias for askSpaceAI for AskAstra modal backward compatibility.
+ */
+export const askAstraAI = askSpaceAI;
+

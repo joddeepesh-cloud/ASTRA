@@ -31,7 +31,11 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5179",
     ]
     MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB
-    ALLOWED_IMAGE_TYPES: set = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+    ALLOWED_IMAGE_TYPES: set[str] = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+    # Space Help AI Settings
+    ASTRA_AI_PROVIDER: str = os.getenv("ASTRA_AI_PROVIDER", "google")
+    ASTRA_AI_MODEL: str = os.getenv("ASTRA_AI_MODEL", "gemini-1.5-flash")
+    ASTRA_AI_API_KEY: str | None = os.getenv("ASTRA_AI_API_KEY", None)
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

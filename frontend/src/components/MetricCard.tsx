@@ -8,7 +8,7 @@ interface MetricCardProps {
   icon: LucideIcon;
   trend?: string;
   isDemo?: boolean;
-  accentColor?: 'cyan' | 'amber' | 'crimson' | 'emerald';
+  accentColor?: 'silver' | 'amber' | 'crimson' | 'emerald';
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -18,35 +18,35 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   icon: Icon,
   trend,
   isDemo = true,
-  accentColor = 'cyan'
+  accentColor = 'silver'
 }) => {
   const getIconBg = () => {
     switch (accentColor) {
       case 'amber':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        return 'bg-[#3A2B15] text-[#D6A84F] border-[#D6A84F]/30';
       case 'crimson':
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+        return 'bg-[#3A1D1D] text-rose-400 border-rose-500/30';
       case 'emerald':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-      case 'cyan':
+        return 'bg-[#0E241B] text-[#5FC7A1] border-[#5FC7A1]/30';
+      case 'silver':
       default:
-        return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
+        return 'bg-[#151B23] text-[#D5DAE0] border-[#C7CDD5]/30';
     }
   };
 
   return (
-    <div className="glass-panel glass-panel-hover p-5 rounded-xl border relative overflow-hidden group">
+    <div className="glass-panel glass-panel-hover p-5 rounded-xl border border-[#252D37] relative overflow-hidden group font-sans-ui">
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">{title}</span>
+            <span className="text-xs font-mono-tech font-medium text-[#717985] uppercase tracking-wider">{title}</span>
             {isDemo && (
-              <span className="text-[10px] font-mono text-amber-400/80 bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-500/20">
+              <span className="text-[10px] font-mono-tech text-[#D6A84F] bg-[#3A2B15]/60 px-1.5 py-0.5 rounded border border-[#D6A84F]/30">
                 DEMO
               </span>
             )}
           </div>
-          <div className="mt-2 text-2xl md:text-3xl font-bold font-mono text-slate-100 tracking-tight">
+          <div className="mt-2 text-2xl md:text-3xl font-bold font-mono-tech text-[#F2F4F7] tracking-tight">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </div>
         </div>
@@ -55,9 +55,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         </div>
       </div>
       {(subtitle || trend) && (
-        <div className="mt-3 flex items-center justify-between text-xs text-slate-400 font-mono pt-3 border-t border-slate-800/80">
+        <div className="mt-3 flex items-center justify-between text-xs text-[#A8B0BA] font-mono-tech pt-3 border-t border-[#252D37]">
           <span>{subtitle}</span>
-          {trend && <span className="text-cyan-400 font-semibold">{trend}</span>}
+          {trend && <span className="text-[#D5DAE0] font-semibold">{trend}</span>}
         </div>
       )}
     </div>

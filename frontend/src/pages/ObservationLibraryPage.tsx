@@ -3,6 +3,8 @@ import type { Observation, BroadMorphology } from '../types';
 import libraryData from '../data/observationLibrary.json';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { EmptyState } from '../components/EmptyState';
+import { ObservationDossierModal } from '../components/ObservationDossierModal';
+import { AskAstraModal } from '../components/AskAstraModal';
 import {
   Search,
   SlidersHorizontal,
@@ -13,9 +15,7 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-  Info,
-  X,
-  Bot
+  Info
 } from 'lucide-react';
 
 const LIBRARY_OBSERVATIONS = libraryData as Observation[];
@@ -36,8 +36,9 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24; // Scalable pagination for 2,000+ observations
 
-  // "Know More" modal state
-  const [knowMoreObs, setKnowMoreObs] = useState<Observation | null>(null);
+  // Dossier and Ask Astra modal states
+  const [dossierObs, setDossierObs] = useState<Observation | null>(null);
+  const [askAstraObs, setAskAstraObs] = useState<Observation | null>(null);
 
   const filteredAndSortedObservations = useMemo(() => {
     let result = LIBRARY_OBSERVATIONS.filter((obs) => {
@@ -66,51 +67,43 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
         return false;
       }
 
+      // Anomaly Score Filter (High anomaly triage >= 0.60)
+      if (anomalyFilter === 'ANOMALOUS' && obs.anomaly_score < 0.60) {
+        return false;
+      }
+      if (anomalyFilter === 'STANDARD' && obs.anomaly_score >= 0.60) {
+        return false;
+      }
+
       // Confidence Filter
       if (confidenceFilter === 'HIGH' && obs.confidence < 0.90) return false;
       if (confidenceFilter === 'MED' && (obs.confidence < 0.80 || obs.confidence >= 0.90)) return false;
       if (confidenceFilter === 'LOW' && obs.confidence >= 0.80) return false;
 
-      // Anomaly Filter
-      if (anomalyFilter === 'ANOMALOUS' && obs.anomaly_score < 0.65) return false;
-      if (anomalyFilter === 'STANDARD' && obs.anomaly_score >= 0.65) return false;
-
       return true;
     });
 
-    // Sorting
-    result.sort((a, b) => {
-      if (sortBy === 'newest') {
-        return new Date(b.observation_time).getTime() - new Date(a.observation_time).getTime();
-      }
-      if (sortBy === 'oldest') {
-        return new Date(a.observation_time).getTime() - new Date(b.observation_time).getTime();
-      }
+    // Sorting Logic
+    return result.sort((a, b) => {
+      if (sortBy === 'newest') return b.id.localeCompare(a.id);
+      if (sortBy === 'oldest') return a.id.localeCompare(b.id);
       if (sortBy === 'priority') {
-        const pMap: Record<string, number> = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
-        return (pMap[b.priority] || 0) - (pMap[a.priority] || 0);
+        const pOrder: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+        return (pOrder[b.priority] || 0) - (pOrder[a.priority] || 0);
       }
-      if (sortBy === 'anomaly') {
-        return b.anomaly_score - a.anomaly_score;
-      }
-      if (sortBy === 'confidence') {
-        return b.confidence - a.confidence;
-      }
+      if (sortBy === 'anomaly') return b.anomaly_score - a.anomaly_score;
+      if (sortBy === 'confidence') return b.confidence - a.confidence;
       return 0;
     });
-
-    return result;
   }, [searchQuery, morphologyFilter, priorityFilter, confidenceFilter, anomalyFilter, sortBy]);
 
-  // Pagination logic for scalability
+  // Pagination calculation
   const totalItems = filteredAndSortedObservations.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-  const paginatedObservations = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredAndSortedObservations.slice(start, start + itemsPerPage);
-  }, [filteredAndSortedObservations, currentPage, itemsPerPage]);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedObservations = filteredAndSortedObservations.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleResetFilters = () => {
+  const resetFilters = () => {
     setSearchQuery('');
     setMorphologyFilter('ALL');
     setPriorityFilter('ALL');
@@ -121,41 +114,42 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 md:p-10 space-y-6 max-w-7xl mx-auto font-sans-ui text-[#F2F4F7] selection:bg-[#C7CDD5]/30">
+      
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#252D37] pb-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold font-mono text-white tracking-wider">
+          <div className="flex items-center gap-2 font-mono-tech">
+            <h1 className="text-2xl font-bold font-serif-display text-[#F2F4F7] tracking-wider uppercase">
               OBSERVATION LIBRARY
             </h1>
-            <span className="text-xs font-mono bg-cyan-950/80 text-cyan-400 border border-cyan-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> SCIENTIFIC ARCHIVE
+            <span className="text-xs font-mono-tech bg-[#151B23] text-[#D5DAE0] border border-[#C7CDD5]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-[#D6A84F]" /> SCIENTIFIC ARCHIVE
             </span>
           </div>
-          <p className="text-xs text-slate-400 font-sans mt-1">
+          <p className="text-xs text-[#A8B0BA] font-sans-ui mt-1">
             Explore 2,000 genuine Galaxy Zoo 2 astronomical survey observations and morphological classifications.
           </p>
         </div>
 
         {/* View Layout Switcher */}
-        <div className="flex items-center gap-2 bg-slate-900/90 p-1.5 rounded-lg border border-slate-800 self-start">
+        <div className="flex items-center gap-2 bg-[#0D1219] p-1.5 rounded-lg border border-[#252D37] self-start font-mono-tech">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-2 rounded font-mono text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`p-2 rounded text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               viewMode === 'grid'
-                ? 'bg-cyan-950 text-cyan-300 border border-cyan-700/60 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#252D37] text-[#F2F4F7] border border-[#C7CDD5]/50 shadow-sm'
+                : 'text-[#717985] hover:text-[#D5DAE0]'
             }`}
           >
             <Grid3X3 className="w-4 h-4" /> GRID
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded font-mono text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`p-2 rounded text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               viewMode === 'list'
-                ? 'bg-cyan-950 text-cyan-300 border border-cyan-700/60 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#252D37] text-[#F2F4F7] border border-[#C7CDD5]/50 shadow-sm'
+                : 'text-[#717985] hover:text-[#D5DAE0]'
             }`}
           >
             <List className="w-4 h-4" /> LIST
@@ -164,10 +158,10 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
       </div>
 
       {/* Discovery & Multi-Filter Console */}
-      <div className="glass-panel p-5 rounded-xl border border-slate-800/80 space-y-4">
+      <div className="glass-panel p-5 rounded-xl border border-[#252D37] space-y-4 font-mono-tech">
         {/* Main Search Input */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <div className="relative font-mono-tech">
+          <Search className="w-4 h-4 text-[#717985] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
@@ -176,22 +170,22 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
               setCurrentPage(1);
             }}
             placeholder="Search by Library ID (e.g. LIB-000042), Asset ID, SDSS ObjID, morphology, or description..."
-            className="w-full bg-slate-950/90 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-all shadow-inner"
+            className="w-full bg-[#030508] border border-[#252D37] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#F2F4F7] placeholder-[#717985] focus:outline-none focus:border-[#C7CDD5] transition-all shadow-inner"
           />
         </div>
 
         {/* Filter Toolbar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-1">
           {/* Morphology Dropdown */}
-          <div className="space-y-1 font-mono text-[11px]">
-            <label className="text-slate-400 block text-[10px] uppercase tracking-wider">Morphology</label>
+          <div className="space-y-1 text-[11px]">
+            <label className="text-[#717985] block text-[10px] uppercase tracking-wider">Morphology</label>
             <select
               value={morphologyFilter}
               onChange={(e) => {
                 setMorphologyFilter(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="w-full bg-slate-950 border border-slate-800 rounded-md px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 cursor-pointer"
+              className="w-full bg-[#030508] border border-[#252D37] rounded-md px-2.5 py-1.5 text-[#F2F4F7] focus:outline-none focus:border-[#C7CDD5] cursor-pointer"
             >
               <option value="ALL">All Morphologies (4-Class)</option>
               <option value="SMOOTH">Smooth (Elliptical)</option>
@@ -201,142 +195,139 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
             </select>
           </div>
 
-          {/* Priority Dropdown */}
-          <div className="space-y-1 font-mono text-[11px]">
-            <label className="text-slate-400 block text-[10px] uppercase tracking-wider">Priority Level</label>
+          {/* Priority Level */}
+          <div className="space-y-1 text-[11px]">
+            <label className="text-[#717985] block text-[10px] uppercase tracking-wider">Triage Priority</label>
             <select
               value={priorityFilter}
               onChange={(e) => {
                 setPriorityFilter(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="w-full bg-slate-950 border border-slate-800 rounded-md px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 cursor-pointer"
+              className="w-full bg-[#030508] border border-[#252D37] rounded-md px-2.5 py-1.5 text-[#F2F4F7] focus:outline-none focus:border-[#C7CDD5] cursor-pointer"
             >
-              <option value="ALL">All Priorities</option>
-              <option value="HIGH">High Priority</option>
-              <option value="MEDIUM">Medium Priority</option>
-              <option value="LOW">Low Priority</option>
+              <option value="ALL">All Priority Levels</option>
+              <option value="HIGH">High Priority Only</option>
+              <option value="MEDIUM">Medium Priority Only</option>
+              <option value="LOW">Low Priority Only</option>
             </select>
           </div>
 
-          {/* Confidence Dropdown */}
-          <div className="space-y-1 font-mono text-[11px]">
-            <label className="text-slate-400 block text-[10px] uppercase tracking-wider">Confidence Level</label>
-            <select
-              value={confidenceFilter}
-              onChange={(e) => {
-                setConfidenceFilter(e.target.value as any);
-                setCurrentPage(1);
-              }}
-              className="w-full bg-slate-950 border border-slate-800 rounded-md px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 cursor-pointer"
-            >
-              <option value="ALL">All Confidences</option>
-              <option value="HIGH">High (&ge;90%)</option>
-              <option value="MED">Medium (80-90%)</option>
-              <option value="LOW">Low (&lt;80%)</option>
-            </select>
-          </div>
-
-          {/* Anomaly Status Dropdown */}
-          <div className="space-y-1 font-mono text-[11px]">
-            <label className="text-slate-400 block text-[10px] uppercase tracking-wider">ASTRA Triage Priority</label>
+          {/* Anomaly Signal Filter */}
+          <div className="space-y-1 text-[11px]">
+            <label className="text-[#717985] block text-[10px] uppercase tracking-wider">Anomaly Score</label>
             <select
               value={anomalyFilter}
               onChange={(e) => {
                 setAnomalyFilter(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="w-full bg-slate-950 border border-slate-800 rounded-md px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 cursor-pointer"
+              className="w-full bg-[#030508] border border-[#252D37] rounded-md px-2.5 py-1.5 text-[#F2F4F7] focus:outline-none focus:border-[#C7CDD5] cursor-pointer"
             >
-              <option value="ALL">All Prioritizations</option>
-              <option value="ANOMALOUS">Elevated Prioritization (&ge;0.65)</option>
-              <option value="STANDARD">Standard Prioritization (&lt;0.65)</option>
+              <option value="ALL">All Anomaly Scores</option>
+              <option value="ANOMALOUS">Priority Signal (Score ≥ 0.60)</option>
+              <option value="STANDARD">Standard Baseline (Score &lt; 0.60)</option>
             </select>
           </div>
 
-          {/* Sort By Dropdown */}
-          <div className="space-y-1 font-mono text-[11px]">
-            <label className="text-slate-400 block text-[10px] uppercase tracking-wider">Sort Order</label>
+          {/* Confidence Filter */}
+          <div className="space-y-1 text-[11px]">
+            <label className="text-[#717985] block text-[10px] uppercase tracking-wider">Confidence Level</label>
+            <select
+              value={confidenceFilter}
+              onChange={(e) => {
+                setConfidenceFilter(e.target.value as any);
+                setCurrentPage(1);
+              }}
+              className="w-full bg-[#030508] border border-[#252D37] rounded-md px-2.5 py-1.5 text-[#F2F4F7] focus:outline-none focus:border-[#C7CDD5] cursor-pointer"
+            >
+              <option value="ALL">All Confidence Levels</option>
+              <option value="HIGH">High Confidence (≥ 90%)</option>
+              <option value="MED">Moderate (80% – 89%)</option>
+              <option value="LOW">Lower (&lt; 80%)</option>
+            </select>
+          </div>
+
+          {/* Sorting Dropdown */}
+          <div className="space-y-1 text-[11px]">
+            <label className="text-[#717985] block text-[10px] uppercase tracking-wider">Sort Archive By</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-md px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 cursor-pointer"
+              className="w-full bg-[#030508] border border-[#252D37] rounded-md px-2.5 py-1.5 text-[#F2F4F7] focus:outline-none focus:border-[#C7CDD5] cursor-pointer"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
-              <option value="priority">Highest Priority</option>
-              <option value="anomaly">Highest Prioritization Signal</option>
+              <option value="priority">Highest Priority Level</option>
+              <option value="anomaly">Highest Anomaly Score</option>
               <option value="confidence">Highest Confidence</option>
             </select>
           </div>
         </div>
 
-        {/* Results Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-center text-xs font-mono text-slate-400 pt-3 border-t border-slate-800/60 gap-2">
+        {/* Results Counter & Active Filters Summary */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#252D37] text-xs text-[#A8B0BA]">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400" />
-            <span>
-              Showing <strong className="text-white">{paginatedObservations.length}</strong> of{' '}
-              <strong className="text-white">{totalItems}</strong> matching records (Total Archive Size: {LIBRARY_OBSERVATIONS.length})
-            </span>
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#8FAFC2]" />
+            <span>Showing <strong className="text-white font-mono-tech">{paginatedObservations.length}</strong> of <strong className="text-white font-mono-tech">{totalItems.toLocaleString()}</strong> cataloged observations</span>
           </div>
 
           {(searchQuery || morphologyFilter !== 'ALL' || priorityFilter !== 'ALL' || confidenceFilter !== 'ALL' || anomalyFilter !== 'ALL') && (
             <button
-              onClick={handleResetFilters}
-              className="text-cyan-400 hover:text-cyan-300 underline cursor-pointer text-xs"
+              onClick={resetFilters}
+              className="text-[#8FAFC2] hover:text-white underline cursor-pointer text-xs"
             >
-              Reset Filters
+              Reset Filter Criteria
             </button>
           )}
         </div>
       </div>
 
-      {/* Library Grid or List */}
+      {/* Dataset Render Area */}
       {paginatedObservations.length === 0 ? (
         <EmptyState
-          title="No Archive Match Found"
-          description="Try broadening your search term or clearing multi-filter constraints."
-          onReset={handleResetFilters}
+          title="No Archive Observations Found"
+          description="No observations matched your search term or active filter settings in the Galaxy Zoo 2 dataset."
+          onReset={resetFilters}
         />
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {paginatedObservations.map((obs) => (
             <div
               key={obs.id}
-              className="glass-panel glass-panel-hover rounded-xl border border-slate-800/90 overflow-hidden flex flex-col justify-between group transition-all"
+              className="glass-panel glass-panel-hover rounded-xl border border-[#252D37] overflow-hidden flex flex-col justify-between group font-sans-ui"
             >
-              {/* Image Banner */}
-              <div className="relative aspect-square bg-black overflow-hidden">
+              {/* Thumbnail Header */}
+              <div className="relative aspect-square bg-[#030508] overflow-hidden">
                 <img
                   src={obs.image_url}
                   alt={obs.id}
                   loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
-                
-                <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#030508] via-transparent to-transparent opacity-80" />
+
+                <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 font-mono-tech">
                   <PriorityBadge priority={obs.priority} />
                   {obs.anomaly_score >= 0.65 && (
-                    <span className="text-[9px] font-mono bg-amber-950/90 text-amber-300 border border-amber-800/80 px-1.5 py-0.5 rounded font-bold">
+                    <span className="text-[9px] bg-[#3A2B15] text-[#D6A84F] border border-[#D6A84F]/40 px-1.5 py-0.5 rounded font-bold">
                       PRIORITY SIGNAL
                     </span>
                   )}
                 </div>
 
-                <div className="absolute top-2.5 right-2.5 text-[10px] font-mono bg-slate-950/80 text-cyan-300 px-2 py-0.5 rounded border border-cyan-900/50 backdrop-blur-sm">
+                <div className="absolute top-2.5 right-2.5 text-[10px] font-mono-tech bg-[#030508]/90 text-[#D5DAE0] px-2 py-0.5 rounded border border-[#252D37] backdrop-blur-sm">
                   {obs.broad_morphology}
                 </div>
 
-                <div className="absolute bottom-2.5 left-2.5 right-2.5 flex justify-between items-end">
+                <div className="absolute bottom-2.5 left-2.5 right-2.5 flex justify-between items-end font-mono-tech">
                   <div>
-                    <span className="text-xs font-mono text-white font-bold block">{obs.id}</span>
-                    <span className="text-[10px] font-mono text-slate-400 truncate max-w-[140px] block">
+                    <span className="text-xs text-white font-bold block">{obs.id}</span>
+                    <span className="text-[10px] text-[#717985] truncate max-w-[140px] block">
                       Asset: {obs.asset_id}
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono text-emerald-400 bg-slate-900/80 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] text-[#5FC7A1] bg-[#0E241B] px-1.5 py-0.5 rounded border border-[#5FC7A1]/30">
                     {(obs.confidence * 100).toFixed(0)}% CONF
                   </span>
                 </div>
@@ -344,39 +335,39 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
 
               {/* Card Body */}
               <div className="p-3.5 space-y-2.5 flex-1 flex flex-col justify-between">
-                <div className="space-y-2">
+                <div className="space-y-2 font-mono-tech">
                   {/* Metadata coordinates & GZ2 class */}
-                  <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 bg-slate-950/60 px-2 py-1 rounded border border-slate-900">
+                  <div className="flex justify-between items-center text-[10px] text-[#717985] bg-[#030508] px-2 py-1 rounded border border-[#252D37]">
                     <span>RA: {obs.ra.toFixed(2)}°</span>
                     <span>DEC: {obs.dec.toFixed(2)}°</span>
-                    <span className="text-cyan-400 font-semibold">{obs.gz2class}</span>
+                    <span className="text-[#D5DAE0] font-semibold">{obs.gz2class}</span>
                   </div>
 
                   {/* Scientific Description */}
-                  <p className="text-[11px] font-sans text-slate-300 line-clamp-2 leading-relaxed">
+                  <p className="text-[11px] font-sans-ui text-[#A8B0BA] line-clamp-2 leading-relaxed">
                     {obs.explanation}
                   </p>
                 </div>
 
                 {/* Card Footer Provenance & Actions */}
-                <div className="pt-2.5 border-t border-slate-800/70 space-y-2">
-                  <div className="text-[9px] font-mono text-slate-500 truncate">
+                <div className="pt-2.5 border-t border-[#252D37] space-y-2 font-mono-tech">
+                  <div className="text-[9px] text-[#717985] truncate">
                     Source: {obs.provenance || 'Galaxy Zoo 2 / SDSS DR7'}
                   </div>
 
                   <div className="flex items-center justify-between gap-1.5">
                     <button
-                      onClick={() => setKnowMoreObs(obs)}
-                      className="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-mono text-[11px] font-medium border border-slate-700/60 transition-all flex items-center gap-1 cursor-pointer"
-                      title="Information & AI context preview"
+                      onClick={() => setDossierObs(obs)}
+                      className="px-2.5 py-1.5 rounded bg-[#15232E] hover:bg-[#252D37] text-[#8FAFC2] hover:text-white text-[11px] font-semibold border border-[#8FAFC2]/40 transition-all flex items-center gap-1 cursor-pointer"
+                      title="Open Observation Science Dossier"
                     >
-                      <Info className="w-3 h-3 text-indigo-400" />
-                      Know More
+                      <Info className="w-3.5 h-3.5 text-[#8FAFC2]" />
+                      KNOW MORE
                     </button>
 
                     <button
                       onClick={() => onAnalyze(obs)}
-                      className="px-3 py-1.5 rounded bg-cyan-950 hover:bg-cyan-900 text-cyan-300 hover:text-white font-mono text-[11px] font-semibold border border-cyan-800/60 transition-all flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 rounded bg-[#151B23] hover:bg-[#252D37] text-[#D5DAE0] hover:text-white text-[11px] font-semibold border border-[#C7CDD5]/30 transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <Eye className="w-3 h-3" />
                       Explore <ArrowRight className="w-3 h-3" />
@@ -388,50 +379,50 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
           ))}
         </div>
       ) : (
-        <div className="glass-panel rounded-xl border border-slate-800/80 overflow-hidden">
-          <div className="divide-y divide-slate-800/80">
+        <div className="glass-panel rounded-xl border border-[#252D37] overflow-hidden font-mono-tech">
+          <div className="divide-y divide-[#252D37]">
             {paginatedObservations.map((obs) => (
               <div
                 key={obs.id}
-                className="p-3.5 flex flex-col md:flex-row items-center justify-between gap-4 hover:bg-slate-900/50 transition-colors"
+                className="p-3.5 flex flex-col md:flex-row items-center justify-between gap-4 hover:bg-[#0D1219]/60 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <img
                     src={obs.image_url}
                     alt={obs.id}
                     loading="lazy"
-                    className="w-14 h-14 rounded-lg object-cover border border-cyan-900/40 bg-black shrink-0"
+                    className="w-14 h-14 rounded-lg object-cover border border-[#252D37] bg-black shrink-0"
                   />
-                  <div className="space-y-1 font-mono">
+                  <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-white">{obs.id}</span>
-                      <span className="text-xs text-slate-400">(Asset: {obs.asset_id})</span>
+                      <span className="text-xs text-[#717985]">(Asset: {obs.asset_id})</span>
                       <PriorityBadge priority={obs.priority} />
-                      <span className="text-xs text-cyan-400 font-semibold">{obs.broad_morphology}</span>
+                      <span className="text-xs text-[#D5DAE0] font-semibold">{obs.broad_morphology}</span>
                     </div>
-                    <p className="text-xs text-slate-400 font-sans line-clamp-1 max-w-xl">
+                    <p className="text-xs text-[#A8B0BA] font-sans-ui line-clamp-1 max-w-xl">
                       {obs.explanation}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="text-right font-mono text-xs hidden lg:block">
-                    <span className="text-slate-500 block text-[10px]">CONFIDENCE</span>
-                    <span className="text-emerald-400 font-semibold">{(obs.confidence * 100).toFixed(1)}%</span>
+                  <div className="text-right text-xs hidden lg:block">
+                    <span className="text-[#717985] block text-[10px]">CONFIDENCE</span>
+                    <span className="text-[#5FC7A1] font-semibold">{(obs.confidence * 100).toFixed(1)}%</span>
                   </div>
 
                   <button
-                    onClick={() => setKnowMoreObs(obs)}
-                    className="px-3 py-1.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs border border-slate-700/60 transition-all flex items-center gap-1 cursor-pointer"
+                    onClick={() => setDossierObs(obs)}
+                    className="px-3 py-1.5 rounded bg-[#15232E] hover:bg-[#252D37] text-[#8FAFC2] text-xs border border-[#8FAFC2]/40 transition-all flex items-center gap-1 cursor-pointer font-semibold"
                   >
-                    <Info className="w-3.5 h-3.5 text-indigo-400" />
-                    Know More
+                    <Info className="w-3.5 h-3.5 text-[#8FAFC2]" />
+                    KNOW MORE
                   </button>
 
                   <button
                     onClick={() => onAnalyze(obs)}
-                    className="px-3 py-1.5 rounded bg-cyan-950 hover:bg-cyan-900 text-cyan-300 font-mono text-xs font-semibold border border-cyan-800/60 transition-all flex items-center gap-1 cursor-pointer"
+                    className="px-3 py-1.5 rounded bg-[#151B23] hover:bg-[#252D37] text-[#D5DAE0] font-xs font-semibold border border-[#C7CDD5]/30 transition-all flex items-center gap-1 cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     Explore →
@@ -445,28 +436,24 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
 
       {/* Pagination Controls for 2,000+ dataset scalability */}
       {totalPages > 1 && (
-        <div className="flex justify-between items-center pt-4 border-t border-slate-800/80 font-mono text-xs text-slate-400">
+        <div className="flex justify-between items-center pt-4 border-t border-[#252D37] font-mono-tech text-xs text-[#A8B0BA]">
           <span>
-            Page <strong className="text-white">{currentPage}</strong> of <strong className="text-white">{totalPages}</strong> ({totalItems} records)
+            Page <strong className="text-white">{currentPage}</strong> of <strong className="text-white">{totalPages}</strong> ({totalItems.toLocaleString()} total observations)
           </span>
+
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                setCurrentPage((p) => Math.max(p - 1, 1));
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded bg-slate-900 border border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 text-slate-200 transition-all flex items-center gap-1 cursor-pointer"
+              className="px-3 py-1.5 rounded bg-[#151B23] hover:bg-[#252D37] text-[#D5DAE0] disabled:opacity-40 border border-[#252D37] transition-all flex items-center gap-1 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" /> Previous
             </button>
+
             <button
-              onClick={() => {
-                setCurrentPage((p) => Math.min(p + 1, totalPages));
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded bg-slate-900 border border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 text-slate-200 transition-all flex items-center gap-1 cursor-pointer"
+              className="px-3 py-1.5 rounded bg-[#151B23] hover:bg-[#252D37] text-[#D5DAE0] disabled:opacity-40 border border-[#252D37] transition-all flex items-center gap-1 cursor-pointer"
             >
               Next <ChevronRight className="w-4 h-4" />
             </button>
@@ -474,94 +461,35 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
         </div>
       )}
 
-      {/* Know More Modal (Honest Space Help AI Placeholder with real observation parameters) */}
-      {knowMoreObs && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-950 border border-cyan-800/60 rounded-xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
-            <button
-              onClick={() => setKnowMoreObs(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-900 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {/* Observation Science Dossier Modal */}
+      {dossierObs && (
+        <ObservationDossierModal
+          observation={dossierObs}
+          onClose={() => setDossierObs(null)}
+          onAskAstra={(obs) => {
+            setDossierObs(null);
+            setAskAstraObs(obs);
+          }}
+          onAnalyze={(obs) => {
+            setDossierObs(null);
+            onAnalyze(obs);
+          }}
+        />
+      )}
 
-            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-              <div className="w-10 h-10 rounded-lg bg-indigo-950 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
-                <Bot className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold font-mono text-white">Space Help AI</h3>
-                <span className="text-[10px] font-mono text-cyan-400">TARGET: {knowMoreObs.id} (Asset {knowMoreObs.asset_id})</span>
-              </div>
-            </div>
-
-            <div className="space-y-3 font-sans">
-              <div className="p-3 bg-indigo-950/40 border border-indigo-500/30 rounded-lg flex items-start gap-2.5 text-xs text-indigo-300">
-                <Info className="w-4 h-4 shrink-0 text-indigo-400 mt-0.5" />
-                <div>
-                  <strong className="block font-mono text-indigo-200">Space Help AI coming in next feature</strong>
-                  The astronomy-specific AI Assistant for deep morphological breakdown and literature synthesis will be activated in the upcoming release.
-                </div>
-              </div>
-
-              {/* Factual GZ2 Scientific Parameters */}
-              <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 text-xs space-y-2 font-mono">
-                <div className="flex justify-between text-slate-400 border-b border-slate-800/60 pb-1">
-                  <span>Observation ID:</span>
-                  <span className="text-white font-bold">{knowMoreObs.id}</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>SDSS ObjID:</span>
-                  <span className="text-slate-300">{knowMoreObs.dr7objid}</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Target Morphology:</span>
-                  <span className="text-cyan-400 font-bold">{knowMoreObs.broad_morphology}</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>GZ2 Taxonomy:</span>
-                  <span className="text-slate-300">{knowMoreObs.gz2class}</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Classification Confidence:</span>
-                  <span className="text-emerald-400 font-semibold">{(knowMoreObs.confidence * 100).toFixed(1)}%</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Coordinates:</span>
-                  <span className="text-slate-300">RA {knowMoreObs.ra.toFixed(2)}°, DEC {knowMoreObs.dec.toFixed(2)}°</span>
-                </div>
-                <div className="flex justify-between text-slate-400 border-t border-slate-800/60 pt-1">
-                  <span>Survey Provenance:</span>
-                  <span className="text-indigo-300">{knowMoreObs.provenance || 'Galaxy Zoo 2 / SDSS DR7'}</span>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-400">
-                You can currently inspect full scientific parameters, raw morphology probability distributions, and triage metrics on the detail view.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setKnowMoreObs(null)}
-                className="px-4 py-2 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs cursor-pointer border border-slate-800"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  const target = knowMoreObs;
-                  setKnowMoreObs(null);
-                  onAnalyze(target);
-                }}
-                className="px-4 py-2 rounded bg-cyan-950 hover:bg-cyan-900 text-cyan-300 font-mono text-xs font-semibold border border-cyan-700/60 flex items-center gap-1.5 cursor-pointer"
-              >
-                <Eye className="w-3.5 h-3.5" /> View Analysis →
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Ask ASTRA Dedicated Target QA Modal */}
+      {askAstraObs && (
+        <AskAstraModal
+          observation={askAstraObs}
+          onClose={() => setAskAstraObs(null)}
+          onOpenDossier={(obs) => {
+            setAskAstraObs(null);
+            setDossierObs(obs);
+          }}
+        />
       )}
     </div>
   );
 };
+
+export default ObservationLibraryPage;

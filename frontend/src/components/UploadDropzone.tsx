@@ -1,14 +1,18 @@
 import React, { useState, useRef } from 'react';
 import {
   UploadCloud, AlertTriangle, CheckCircle2, RefreshCw,
-  Sparkles, Cpu, AlertCircle, ArrowRight
+  AlertCircle, ArrowRight, ShieldCheck, Telescope, Rocket
 } from 'lucide-react';
 import { triageImage } from '../services/api';
 import type { TriageResponse, DomainValidationGate } from '../types/api';
+import type { Observation } from '../types';
 import { ConfidenceBar } from './ConfidenceBar';
 import { PriorityBadge } from './PriorityBadge';
+import { ObservationLibraryPicker } from './ObservationLibraryPicker';
+import { recordLiveAnalysis } from '../services/analysisHistory';
 
 type UploadState = 'idle' | 'validating' | 'analyzing' | 'success' | 'error';
+type InputSource = 'upload' | 'library';
 
 interface UploadDropzoneProps {
   onInspectResult?: (result: TriageResponse, imageFile: File, previewUrl: string) => void;
@@ -16,12 +20,14 @@ interface UploadDropzoneProps {
 
 export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult }) => {
   const [state, setState] = useState<UploadState>('idle');
+  const [inputSource, setInputSource] = useState<InputSource>('upload');
+  const [selectedLibraryObs, setSelectedLibraryObs] = useState<Observation | null>(null);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [triageResult, setTriageResult] = useState<TriageResponse | null>(null);
 
-  // Architecture placeholder for future domain validation model gate
   const domainGate: DomainValidationGate = {
     compatible: true,
     status: 'not_implemented',
@@ -36,20 +42,26 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
     }
     setState('idle');
     setSelectedFile(null);
-    if (previewUrl) {
+    if (previewUrl && previewUrl.startsWith('blob:')) {
       URL.revokeObjectURL(previewUrl);
     }
     setPreviewUrl(null);
     setErrorMessage('');
     setTriageResult(null);
+    setSelectedLibraryObs(null);
+  };
+
+  const handleSwitchInputSource = (source: InputSource) => {
+    if (state !== 'idle') {
+      resetUpload();
+    }
+    setInputSource(source);
   };
 
   const processFile = async (file: File) => {
-    // Reset previous state
     setErrorMessage('');
     setTriageResult(null);
 
-    // 1. Basic Client-Side Validation
     const fname = file.name.toLowerCase();
     const validExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
     const hasValidExt = validExtensions.some((ext) => fname.endsWith(ext));
@@ -73,11 +85,9 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
 
-    // 2. Transition State: VALIDATING
     setState('validating');
-    await new Promise((resolve) => setTimeout(resolve, 300)); // Smooth UI transition
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
-    // 3. Transition State: ANALYZING (Call Real FastAPI Backend)
     setState('analyzing');
 
     const controller = new AbortController();
@@ -89,6 +99,43 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
       setState('success');
     } catch (err: any) {
       setErrorMessage(err.message || "ASTRA's analysis service is currently unavailable. Live analysis cannot be performed.");
+      setState('error');
+    }
+  };
+
+  const runLibraryAnalysis = async (obs: Observation) => {
+    setErrorMessage('');
+    setTriageResult(null);
+    setState('validating');
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      // Fetch genuine library asset image as Blob
+      const imgRes = await fetch(obs.image_url);
+      if (!imgRes.ok) {
+        throw new Error(`Unable to load library observation image asset (${imgRes.statusText}).`);
+      }
+
+      const blob = await imgRes.blob();
+      const filename = `${obs.id}.jpg`;
+      const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
+
+      setSelectedFile(file);
+      setPreviewUrl(obs.image_url);
+
+      setState('analyzing');
+
+      // Submit to real ASTRA FastAPI /triage backend
+      const result = await triageImage(file, controller.signal);
+      setTriageResult(result);
+      setState('success');
+
+      // Record in Session Analysis History ONLY on successful analysis execution
+      recordLiveAnalysis(result, filename, obs.id);
+    } catch (err: any) {
+      setErrorMessage(err.message || "ASTRA analysis could not be completed for the selected library observation.");
       setState('error');
     }
   };
@@ -111,131 +158,250 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
   };
 
   return (
-    <div className="glass-panel p-6 md:p-8 rounded-xl border border-cyan-900/40 space-y-6 max-w-4xl mx-auto">
-      {/* Title Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold font-mono text-white tracking-tight">
-          ANALYZE AN OBSERVATION
-        </h2>
-        <p className="text-xs md:text-sm text-slate-400 font-sans max-w-xl mx-auto">
-          Upload astronomical observation imagery (FITS cutouts, SDSS/HST JPEGs) for real-time morphology classification and scientific triage scoring.
-        </p>
+    <div className="glass-panel p-6 md:p-8 rounded-xl border border-[#C7CDD5]/30 space-y-6 max-w-4xl mx-auto selection:bg-[#C7CDD5]/30 font-sans-ui">
+      {/* Title Header & Input Source Switcher */}
+      <div className="text-center space-y-4">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold font-serif-display text-[#F2F4F7] tracking-tight uppercase">
+            Analyze An Observation
+          </h2>
+          <p className="text-xs md:text-sm text-[#A8B0BA] font-sans-ui max-w-xl mx-auto">
+            Choose an input source below to submit an astronomical observation cutout through ASTRA's real ML triage pipeline.
+          </p>
+        </div>
+
+        {/* Input Source Toggle */}
+        <div className="flex items-center justify-center gap-2 p-1.5 bg-[#0D1219] rounded-xl border border-[#252D37] max-w-md mx-auto">
+          <button
+            onClick={() => handleSwitchInputSource('upload')}
+            className={`flex-1 py-2 px-4 rounded-lg font-mono-tech text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              inputSource === 'upload'
+                ? 'bg-[#D5DAE0] text-[#070B11] shadow-md'
+                : 'text-[#A8B0BA] hover:text-[#F2F4F7]'
+            }`}
+          >
+            <UploadCloud className="w-4 h-4" /> UPLOAD IMAGE
+          </button>
+          <button
+            onClick={() => handleSwitchInputSource('library')}
+            className={`flex-1 py-2 px-4 rounded-lg font-mono-tech text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              inputSource === 'library'
+                ? 'bg-[#D5DAE0] text-[#070B11] shadow-md'
+                : 'text-[#A8B0BA] hover:text-[#F2F4F7]'
+            }`}
+          >
+            <Telescope className="w-4 h-4" /> OBSERVATION LIBRARY
+          </button>
+        </div>
       </div>
 
       {/* Domain Input Warning Box */}
-      <div className="bg-amber-950/40 border border-amber-500/30 p-3.5 rounded-lg flex items-start gap-3 text-xs text-amber-200">
-        <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-        <div className="space-y-1 font-sans">
-          <span className="font-mono font-bold text-amber-300 uppercase block">
+      <div className="bg-[#3A2B15]/40 border border-[#D6A84F]/30 p-3.5 rounded-lg flex items-start gap-3 text-xs text-[#D6A84F]">
+        <AlertTriangle className="w-5 h-5 text-[#D6A84F] shrink-0 mt-0.5" />
+        <div className="space-y-1 font-sans-ui">
+          <span className="font-mono-tech font-bold text-[#D6A84F] uppercase block">
             ASTRONOMY DOMAIN INPUT REQUIREMENTS
           </span>
-          <p className="text-amber-200/90 leading-relaxed">
+          <p className="text-[#D6A84F]/90 leading-relaxed">
             {domainGate.message} Non-astronomical imagery should not be submitted for morphological analysis.
           </p>
         </div>
       </div>
 
-      {/* Main Dropzone & Analysis Container */}
+      {/* Main Container State: IDLE */}
       {state === 'idle' && (
-        <div
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          className="border-2 border-dashed border-slate-800 bg-slate-950/60 hover:border-cyan-500/50 hover:bg-slate-900/40 rounded-xl p-8 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[260px]"
-        >
-          <div className="space-y-4">
-            <div className="w-16 h-16 rounded-full bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center mx-auto text-cyan-400 shadow-lg">
-              <UploadCloud className="w-8 h-8 animate-pulse" />
+        <>
+          {inputSource === 'upload' ? (
+            /* Upload File Dropzone */
+            <div
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              className="border-2 border-dashed border-[#252D37] bg-[#070B11]/60 hover:border-[#C7CDD5]/50 hover:bg-[#0D1219]/40 rounded-xl p-8 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[260px]"
+            >
+              <div className="space-y-4">
+                <div className="w-16 h-16 rounded-full bg-[#151B23] border border-[#C7CDD5]/30 flex items-center justify-center mx-auto text-[#D5DAE0] shadow-lg">
+                  <UploadCloud className="w-8 h-8 text-[#8FAFC2]" />
+                </div>
+                <div className="space-y-1 font-sans-ui">
+                  <p className="text-sm font-semibold text-[#F2F4F7]">
+                    Drag and drop your astronomical image file here
+                  </p>
+                  <p className="text-xs text-[#717985]">
+                    Supports JPEG, PNG, WEBP format up to 10 MB
+                  </p>
+                </div>
+                <div>
+                  <label className="px-5 py-2.5 rounded-lg bg-[#D5DAE0] hover:bg-white text-[#070B11] font-mono-tech text-xs font-bold cursor-pointer transition-all inline-block shadow-md shadow-black/40">
+                    BROWSE FILES
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
-            <div className="space-y-1 font-sans">
-              <p className="text-sm font-semibold text-slate-200">
-                Drag and drop your astronomical image file here
-              </p>
-              <p className="text-xs text-slate-400">
-                Supports JPEG, PNG, WEBP format up to 10 MB
-              </p>
-            </div>
+          ) : (
+            /* Observation Library Picker or Loaded Target View */
             <div>
-              <label className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold cursor-pointer transition-all inline-block shadow-md shadow-cyan-950/50">
-                BROWSE FILES
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleFileSelect}
-                  className="hidden"
+              {!selectedLibraryObs ? (
+                <ObservationLibraryPicker
+                  onSelectObservation={(obs) => setSelectedLibraryObs(obs)}
+                  selectedObservationId={selectedLibraryObs ? (selectedLibraryObs as Observation).id : null}
                 />
-              </label>
+              ) : (
+                /* Selected Curated Observation Pre-Analysis Card */
+                <div className="glass-panel p-6 rounded-xl border border-[#8FAFC2]/40 bg-[#070B11]/90 space-y-6">
+                  <div className="flex items-center justify-between border-b border-[#252D37] pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 rounded bg-[#15232E] text-[#8FAFC2] border border-[#8FAFC2]/40 font-mono-tech text-xs font-bold">
+                        CURATED LIBRARY OBSERVATION
+                      </span>
+                      <span className="text-xs text-[#717985] font-mono-tech">
+                        Galaxy Zoo 2 / SDSS DR7
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => setSelectedLibraryObs(null)}
+                      className="text-xs font-mono-tech text-[#8FAFC2] hover:text-white underline cursor-pointer"
+                    >
+                      Change Target
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    {/* Left: Image Preview */}
+                    <div className="md:col-span-5">
+                      <div className="aspect-square w-full rounded-lg overflow-hidden bg-black border border-[#252D37] relative">
+                        <img
+                          src={selectedLibraryObs.image_url}
+                          alt={selectedLibraryObs.id}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-[#030508]/90 font-mono-tech text-[10px] text-[#D5DAE0] border border-[#252D37]">
+                          {selectedLibraryObs.id}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Genuine Source Metadata */}
+                    <div className="md:col-span-7 space-y-4 flex flex-col justify-between font-mono-tech text-xs">
+                      <div className="space-y-2.5 bg-[#0D1219] p-4 rounded-lg border border-[#252D37]">
+                        <span className="text-xs font-bold text-[#D5DAE0] block uppercase border-b border-[#252D37] pb-1">
+                          SOURCE CATALOG METADATA
+                        </span>
+
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div>
+                            <span className="text-[#717985] block">Target ID:</span>
+                            <span className="text-white font-bold">{selectedLibraryObs.id}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#717985] block">SDSS DR7 ObjID:</span>
+                            <span className="text-[#D5DAE0]">{selectedLibraryObs.dr7objid}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#717985] block">Right Ascension (RA):</span>
+                            <span className="text-[#8FAFC2]">{selectedLibraryObs.ra.toFixed(4)}°</span>
+                          </div>
+                          <div>
+                            <span className="text-[#717985] block">Declination (DEC):</span>
+                            <span className="text-[#8FAFC2]">{selectedLibraryObs.dec.toFixed(4)}°</span>
+                          </div>
+                          <div>
+                            <span className="text-[#717985] block">GZ2 Taxonomy:</span>
+                            <span className="text-[#D6A84F] font-bold">{selectedLibraryObs.gz2class}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#717985] block">Broad Category:</span>
+                            <span className="text-[#5FC7A1]">{selectedLibraryObs.broad_morphology}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Source Metadata Notice */}
+                      <div className="p-3 bg-[#15232E]/60 rounded border border-[#8FAFC2]/30 text-[11px] text-[#8FAFC2] font-sans-ui leading-relaxed">
+                        Notice: Source catalog information displayed above. This observation cutout has not yet been processed by ASTRA's real ML inference pipeline.
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-3 pt-1">
+                        <button
+                          onClick={() => setSelectedLibraryObs(null)}
+                          className="py-3 px-4 rounded bg-[#151B23] hover:bg-[#252D37] text-[#A8B0BA] font-mono-tech text-xs border border-[#252D37] transition-all cursor-pointer"
+                        >
+                          SELECT DIFFERENT TARGET
+                        </button>
+
+                        <button
+                          onClick={() => runLibraryAnalysis(selectedLibraryObs)}
+                          className="flex-1 py-3 px-4 rounded bg-[#D5DAE0] hover:bg-white text-[#070B11] font-mono-tech text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <Rocket className="w-4 h-4 text-[#070B11]" />
+                          RUN ASTRA ANALYSIS
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
 
-      {/* Validating State */}
-      {state === 'validating' && (
-        <div className="border border-slate-800 bg-slate-950/80 rounded-xl p-10 text-center space-y-4 min-h-[260px] flex flex-col items-center justify-center">
-          <Sparkles className="w-10 h-10 text-amber-400 animate-bounce mx-auto" />
-          <div className="space-y-1 font-mono">
-            <p className="text-sm font-bold text-amber-300">STAGE 1: UNIVERSAL SEMANTIC CHECK...</p>
-            <p className="text-xs text-slate-400">{selectedFile?.name}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Analyzing State */}
-      {state === 'analyzing' && (
-        <div className="border border-cyan-900/60 bg-slate-950/90 rounded-xl p-10 text-center space-y-4 min-h-[260px] flex flex-col items-center justify-center">
-          <RefreshCw className="w-10 h-10 text-cyan-400 animate-spin mx-auto" />
-          <div className="space-y-2 font-mono">
-            <p className="text-sm font-bold text-cyan-300">STAGE 2: ASTRONOMICAL DOMAIN CHECK & TRIAGE...</p>
-            <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Semantic Gate $\rightarrow$ Domain Gate V2 $\rightarrow$ Galaxy Zoo Morphology</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {state === 'error' && (
-        <div className="border border-rose-500/50 bg-rose-950/30 rounded-xl p-8 text-center space-y-4 min-h-[240px] flex flex-col items-center justify-center">
-          <div className="w-14 h-14 rounded-full bg-rose-950/80 border border-rose-500/40 flex items-center justify-center mx-auto text-rose-400">
-            <AlertCircle className="w-8 h-8" />
-          </div>
-          <div className="space-y-2 font-mono max-w-md mx-auto">
-            <span className="px-2.5 py-1 rounded bg-rose-900/60 text-rose-300 border border-rose-500/40 text-xs font-bold uppercase inline-block">
-              ANALYSIS FAILED
-            </span>
-            <p className="text-xs text-rose-200/90 font-sans leading-relaxed">
-              {errorMessage}
+      {/* Loading States: VALIDATING or ANALYZING */}
+      {(state === 'validating' || state === 'analyzing') && (
+        <div className="border border-[#252D37] bg-[#070B11]/90 rounded-xl p-10 text-center space-y-4 min-h-[260px] flex flex-col items-center justify-center font-mono-tech">
+          <RefreshCw className="w-10 h-10 text-[#8FAFC2] animate-spin mx-auto" />
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-[#F2F4F7]">
+              {state === 'validating' ? 'VALIDATING ASTRONOMICAL FORMAT...' : 'ANALYZING MORPHOLOGY & TRIAGE...'}
             </p>
+            <p className="text-xs text-[#717985]">
+              Evaluating open-world semantic gate & learned Galaxy Zoo manifold...
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ERROR State */}
+      {state === 'error' && (
+        <div className="border border-[#3A1D1D] bg-[#1F0E0E]/90 rounded-xl p-8 text-center space-y-4 font-mono-tech">
+          <AlertCircle className="w-10 h-10 text-rose-400 mx-auto" />
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-rose-300">ANALYSIS COULD NOT BE COMPLETED</p>
+            <p className="text-xs text-[#A8B0BA] font-sans-ui max-w-md mx-auto">{errorMessage}</p>
           </div>
           <button
             onClick={resetUpload}
-            className="px-4 py-2 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs border border-slate-700 transition-all cursor-pointer"
+            className="px-4 py-2 rounded bg-[#151B23] hover:bg-[#252D37] text-[#D5DAE0] font-mono-tech text-xs border border-[#252D37] cursor-pointer transition-all"
           >
             TRY ANOTHER FILE
           </button>
         </div>
       )}
 
-      {/* Success State: Display Domain Validation & Scientific Analysis Result */}
+      {/* SUCCESS State with Real Backend Triage Result */}
       {state === 'success' && triageResult && (
         <div className="space-y-6">
           {/* Domain COMPATIBLE View */}
           {triageResult.domain_validation?.decision === 'COMPATIBLE' && (
-            <>
-              <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/40 flex items-center justify-between">
-                <div className="flex items-center gap-3 font-mono">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+            <div className="space-y-6">
+              <div className="p-4 rounded-xl bg-[#0E241B] border border-[#5FC7A1]/40 flex items-center justify-between font-mono-tech text-xs">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[#5FC7A1] shrink-0" />
                   <div>
-                    <span className="text-xs text-emerald-400 font-bold uppercase block">
-                      ASTRONOMICAL DOMAIN VERIFIED (TWO-STAGE CHECK PASSED)
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      Semantic Gate + Domain Gate V2 | Total Triage: {triageResult.total_triage_ms} ms
-                    </span>
+                    <span className="font-bold text-[#5FC7A1] uppercase block">ASTRONOMICAL DOMAIN COMPATIBLE</span>
+                    <span className="text-[#A8B0BA] font-sans-ui text-[11px]">{triageResult.domain_validation.semantic_reason || 'Verified as astronomical imagery by onboard domain gate.'}</span>
                   </div>
                 </div>
-                {triageResult.priority_level && <PriorityBadge priority={triageResult.priority_level} />}
+                {triageResult.priority_level && (
+                  <PriorityBadge priority={triageResult.priority_level} />
+                )}
               </div>
 
               {/* Result Main Display Grid */}
@@ -243,32 +409,44 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                 {/* Left: Image & Morphology Classification */}
                 <div className="md:col-span-6 space-y-4">
                   {previewUrl && (
-                    <div className="aspect-square w-full rounded-lg overflow-hidden bg-black border border-slate-800 relative">
+                    <div className="aspect-square w-full rounded-lg overflow-hidden bg-[#030508] border border-[#252D37] relative">
                       <img src={previewUrl} alt="Uploaded observation" className="w-full h-full object-cover" />
-                      <div className="absolute top-3 left-3 bg-slate-950/80 px-2.5 py-1 rounded text-xs font-mono text-cyan-300 border border-cyan-900/50 backdrop-blur-md">
-                        LIVE UPLOAD ANALYSIS
+                      <div className="absolute top-3 left-3 bg-[#030508]/90 px-2.5 py-1 rounded text-xs font-mono-tech text-[#D5DAE0] border border-[#C7CDD5]/30 backdrop-blur-md">
+                        {selectedLibraryObs ? 'CURATED LIBRARY TARGET ANALYSIS' : 'LIVE UPLOAD ANALYSIS'}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedLibraryObs && (
+                    <div className="bg-[#15232E]/70 p-3.5 rounded-lg border border-[#8FAFC2]/40 font-mono-tech text-xs space-y-1">
+                      <div className="flex justify-between items-center text-[#8FAFC2] font-bold">
+                        <span>SOURCE DATA: GALAXY ZOO 2 / SDSS DR7</span>
+                        <span className="text-[10px] text-[#A8B0BA] font-normal">{selectedLibraryObs.id}</span>
+                      </div>
+                      <div className="text-[11px] text-[#A8B0BA] font-sans-ui">
+                        Catalog Taxonomy: <strong className="text-white">{selectedLibraryObs.broad_morphology}</strong> ({selectedLibraryObs.gz2class})
                       </div>
                     </div>
                   )}
 
                   {triageResult.predicted_class && triageResult.class_confidence != null && triageResult.class_probabilities && (
-                    <div className="bg-slate-900/60 p-4 rounded-lg border border-slate-800 space-y-3">
-                      <div className="flex justify-between items-center font-mono">
-                        <span className="text-xs text-slate-400">PREDICTED MORPHOLOGY</span>
-                        <span className="text-sm font-bold text-cyan-300 uppercase">{triageResult.predicted_class}</span>
+                    <div className="bg-[#0D1219]/80 p-4 rounded-lg border border-[#252D37] space-y-3">
+                      <div className="flex justify-between items-center font-mono-tech">
+                        <span className="text-xs text-[#717985]">PREDICTED MORPHOLOGY</span>
+                        <span className="text-sm font-bold text-[#F2F4F7] uppercase">{triageResult.predicted_class}</span>
                       </div>
-                      <div className="flex justify-between items-center font-mono text-xs">
-                        <span className="text-slate-400">CLASSIFICATION CONFIDENCE</span>
-                        <span className="text-emerald-400 font-bold">{(triageResult.class_confidence * 100).toFixed(1)}%</span>
+                      <div className="flex justify-between items-center font-mono-tech text-xs">
+                        <span className="text-[#717985]">CLASSIFICATION CONFIDENCE</span>
+                        <span className="text-[#5FC7A1] font-bold">{(triageResult.class_confidence * 100).toFixed(1)}%</span>
                       </div>
 
-                      <div className="space-y-2 pt-2 border-t border-slate-800">
+                      <div className="space-y-2 pt-2 border-t border-[#252D37]">
                         {Object.entries(triageResult.class_probabilities).map(([cls, prob]) => (
                           <ConfidenceBar
                             key={cls}
                             label={cls}
                             value={prob}
-                            color={prob > 0.7 ? 'cyan' : prob > 0.2 ? 'emerald' : 'amber'}
+                            color={prob > 0.7 ? 'silver' : prob > 0.2 ? 'emerald' : 'amber'}
                           />
                         ))}
                       </div>
@@ -280,32 +458,32 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                 <div className="md:col-span-6 space-y-4">
                   {/* Triage Score Summary Box */}
                   {triageResult.experimental_triage_score != null && (
-                    <div className="bg-slate-900/60 p-4 rounded-lg border border-cyan-900/40 space-y-3">
-                      <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <span className="text-xs font-mono text-slate-400 uppercase">EXPERIMENTAL TRIAGE SCORE</span>
-                        <span className="text-2xl font-mono font-bold text-cyan-300">{triageResult.experimental_triage_score.toFixed(2)}</span>
+                    <div className="bg-[#0D1219]/80 p-4 rounded-lg border border-[#C7CDD5]/30 space-y-3 font-mono-tech">
+                      <div className="flex justify-between items-center border-b border-[#252D37] pb-2">
+                        <span className="text-xs text-[#717985] uppercase">EXPERIMENTAL TRIAGE SCORE</span>
+                        <span className="text-2xl font-bold text-[#F2F4F7]">{triageResult.experimental_triage_score.toFixed(2)}</span>
                       </div>
 
                       <div className="space-y-2.5 pt-1">
                         {triageResult.novelty_score != null && (
                           <div>
-                            <div className="flex justify-between text-xs font-mono mb-1">
-                              <span className="text-slate-400">Novelty Score (Nearest Centroid)</span>
-                              <span className="text-amber-400">{triageResult.novelty_score.toFixed(2)}</span>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-[#717985]">Novelty Score (Nearest Centroid)</span>
+                              <span className="text-[#D6A84F]">{triageResult.novelty_score.toFixed(2)}</span>
                             </div>
-                            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                              <div className="bg-amber-400 h-2 rounded-full" style={{ width: `${triageResult.novelty_score * 100}%` }} />
+                            <div className="w-full bg-[#030508] rounded-full h-2 overflow-hidden border border-[#252D37]">
+                              <div className="bg-[#D6A84F] h-2 rounded-full" style={{ width: `${triageResult.novelty_score * 100}%` }} />
                             </div>
                           </div>
                         )}
 
                         {triageResult.uncertainty_score != null && (
                           <div>
-                            <div className="flex justify-between text-xs font-mono mb-1">
-                              <span className="text-slate-400">Classification Uncertainty</span>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-[#717985]">Classification Uncertainty</span>
                               <span className="text-rose-400">{triageResult.uncertainty_score.toFixed(2)}</span>
                             </div>
-                            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                            <div className="w-full bg-[#030508] rounded-full h-2 overflow-hidden border border-[#252D37]">
                               <div className="bg-rose-400 h-2 rounded-full" style={{ width: `${triageResult.uncertainty_score * 100}%` }} />
                             </div>
                           </div>
@@ -313,12 +491,12 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
 
                         {triageResult.oddity_score != null && (
                           <div>
-                            <div className="flex justify-between text-xs font-mono mb-1">
-                              <span className="text-slate-400">Scientific Oddity Attribute (p_odd)</span>
-                              <span className="text-indigo-400">{triageResult.oddity_score.toFixed(2)}</span>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-[#717985]">Scientific Oddity Attribute (p_odd)</span>
+                              <span className="text-[#8FAFC2]">{triageResult.oddity_score.toFixed(2)}</span>
                             </div>
-                            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                              <div className="bg-indigo-400 h-2 rounded-full" style={{ width: `${triageResult.oddity_score * 100}%` }} />
+                            <div className="w-full bg-[#030508] rounded-full h-2 overflow-hidden border border-[#252D37]">
+                              <div className="bg-[#8FAFC2] h-2 rounded-full" style={{ width: `${triageResult.oddity_score * 100}%` }} />
                             </div>
                           </div>
                         )}
@@ -327,15 +505,15 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                   )}
 
                   {/* Deterministic Scientific Explanation */}
-                  <div className="bg-slate-950/80 p-4 rounded-lg border border-slate-800 space-y-2">
-                    <span className="text-xs font-mono text-cyan-400 font-bold block">DETERMINISTIC TRIAGE EXPLANATION</span>
-                    <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                  <div className="bg-[#030508]/80 p-4 rounded-lg border border-[#252D37] space-y-2">
+                    <span className="text-xs font-mono-tech text-[#8FAFC2] font-bold block">DETERMINISTIC TRIAGE EXPLANATION</span>
+                    <p className="text-xs text-[#A8B0BA] font-sans-ui leading-relaxed">
                       {triageResult.explanation}
                     </p>
                   </div>
 
                   {/* Scientific Disclaimer */}
-                  <div className="p-3 bg-amber-950/30 rounded border border-amber-500/20 text-[11px] font-sans text-amber-200/90 leading-relaxed">
+                  <div className="p-3 bg-[#3A2B15]/30 rounded border border-[#D6A84F]/20 text-[11px] font-sans-ui text-[#D6A84F]/90 leading-relaxed">
                     {triageResult.score_interpretation}
                   </div>
 
@@ -343,7 +521,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                   <div className="flex gap-3 pt-2">
                     <button
                       onClick={resetUpload}
-                      className="flex-1 py-2.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs border border-slate-700 transition-all cursor-pointer"
+                      className="flex-1 py-2.5 rounded bg-[#151B23] hover:bg-[#252D37] text-[#A8B0BA] font-mono-tech text-xs border border-[#252D37] transition-all cursor-pointer"
                     >
                       UPLOAD ANOTHER IMAGE
                     </button>
@@ -351,7 +529,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                     {onInspectResult && selectedFile && previewUrl && (
                       <button
                         onClick={() => onInspectResult(triageResult, selectedFile, previewUrl)}
-                        className="flex-1 py-2.5 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                        className="flex-1 py-2.5 rounded bg-[#D5DAE0] hover:bg-white text-[#070B11] font-mono-tech text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
                       >
                         INSPECT DETAILED VIEW <ArrowRight className="w-3.5 h-3.5" />
                       </button>
@@ -359,20 +537,20 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* Domain INCOMPATIBLE View */}
           {triageResult.domain_validation?.decision === 'INCOMPATIBLE' && (
-            <div className="space-y-6">
-              <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-500/50 flex items-center gap-3 font-mono">
+            <div className="space-y-6 font-mono-tech">
+              <div className="p-4 rounded-xl bg-[#3A1D1D]/80 border border-rose-500/50 flex items-center gap-3">
                 <AlertCircle className="w-6 h-6 text-rose-400 shrink-0" />
                 <div>
                   <span className="text-xs text-rose-300 font-bold uppercase block">
-                    DOMAIN REJECTED — INCOMPATIBLE
+                    REJECTED: NON-ASTRONOMICAL IMAGE
                   </span>
-                  <span className="text-xs text-slate-400">
-                    ASTRA could not validate this image as astronomical observation data. No astronomical classification was performed.
+                  <span className="text-xs text-[#A8B0BA] font-sans-ui">
+                    The uploaded image was flagged as non-astronomical imagery and was rejected prior to ML inference.
                   </span>
                 </div>
               </div>
@@ -381,25 +559,25 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                 <div className="md:col-span-5">
                   {previewUrl && (
                     <div className="aspect-square w-full rounded-lg overflow-hidden bg-black border border-rose-900/40 relative">
-                      <img src={previewUrl} alt="Rejected observation" className="w-full h-full object-cover opacity-80" />
-                      <div className="absolute top-3 left-3 bg-rose-950/90 px-2.5 py-1 rounded text-xs font-mono text-rose-300 border border-rose-500/40 backdrop-blur-md">
-                        REJECTED UPLOAD
+                      <img src={previewUrl} alt="Incompatible input" className="w-full h-full object-cover opacity-60 grayscale" />
+                      <div className="absolute top-3 left-3 bg-rose-950/90 px-2.5 py-1 rounded text-xs font-mono-tech text-rose-300 border border-rose-500/40 backdrop-blur-md">
+                        REJECTED BY PRE-GATE
                       </div>
                     </div>
                   )}
                 </div>
 
                 <div className="md:col-span-7 space-y-4 flex flex-col justify-between">
-                  <div className="bg-slate-950/90 p-5 rounded-xl border border-rose-900/40 space-y-3 font-sans">
-                    <h3 className="text-sm font-mono font-bold text-rose-300 uppercase tracking-wide flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-rose-400" />
-                      DOMAIN REJECTION NOTICE
+                  <div className="bg-[#030508]/90 p-5 rounded-xl border border-[#252D37] space-y-3 font-sans-ui">
+                    <h3 className="text-sm font-mono-tech font-bold text-rose-300 uppercase tracking-wide flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-rose-400" />
+                      SAFETY SYSTEM PRE-GATE REJECTION
                     </h3>
-                    <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                      ASTRA could not validate this image as astronomical observation data. No astronomical classification was performed.
+                    <p className="text-xs text-[#A8B0BA] leading-relaxed font-sans-ui">
+                      {triageResult.domain_validation.semantic_reason || 'Image fell outside astronomical survey requirements.'}
                     </p>
                     {triageResult.domain_validation.semantic_reason && (
-                      <div className="p-3 bg-rose-950/30 rounded border border-rose-500/20 text-xs font-mono text-rose-200">
+                      <div className="p-3 bg-[#3A1D1D]/30 rounded border border-rose-500/20 text-xs font-mono-tech text-rose-200">
                         Reason: {triageResult.domain_validation.semantic_reason}
                       </div>
                     )}
@@ -407,7 +585,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
 
                   <button
                     onClick={resetUpload}
-                    className="w-full py-3 rounded bg-slate-900 hover:bg-slate-800 text-slate-200 font-mono text-xs font-bold border border-slate-700 transition-all cursor-pointer"
+                    className="w-full py-3 rounded bg-[#151B23] hover:bg-[#252D37] text-[#F2F4F7] font-mono-tech text-xs font-bold border border-[#252D37] transition-all cursor-pointer"
                   >
                     TRY ANOTHER IMAGE
                   </button>
@@ -418,14 +596,14 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
 
           {/* Domain UNCERTAIN View */}
           {triageResult.domain_validation?.decision === 'UNCERTAIN' && (
-            <div className="space-y-6">
-              <div className="p-4 rounded-xl bg-amber-950/60 border border-amber-500/50 flex items-center gap-3 font-mono">
-                <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0" />
+            <div className="space-y-6 font-mono-tech">
+              <div className="p-4 rounded-xl bg-[#3A2B15]/60 border border-[#D6A84F]/50 flex items-center gap-3">
+                <AlertTriangle className="w-6 h-6 text-[#D6A84F] shrink-0" />
                 <div>
-                  <span className="text-xs text-amber-300 font-bold uppercase block">
+                  <span className="text-xs text-[#D6A84F] font-bold uppercase block">
                     DOMAIN VALIDATION UNCERTAIN
                   </span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-[#A8B0BA] font-sans-ui">
                     ASTRA could not confidently validate this image as astronomical observation data. Analysis was stopped to avoid an unsupported classification.
                   </span>
                 </div>
@@ -434,9 +612,9 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <div className="md:col-span-5">
                   {previewUrl && (
-                    <div className="aspect-square w-full rounded-lg overflow-hidden bg-black border border-amber-900/40 relative">
+                    <div className="aspect-square w-full rounded-lg overflow-hidden bg-black border border-[#D6A84F]/40 relative">
                       <img src={previewUrl} alt="Uncertain observation" className="w-full h-full object-cover opacity-90" />
-                      <div className="absolute top-3 left-3 bg-amber-950/90 px-2.5 py-1 rounded text-xs font-mono text-amber-300 border border-amber-500/40 backdrop-blur-md">
+                      <div className="absolute top-3 left-3 bg-[#3A2B15]/90 px-2.5 py-1 rounded text-xs font-mono-tech text-[#D6A84F] border border-[#D6A84F]/40 backdrop-blur-md">
                         UNCERTAIN DOMAIN
                       </div>
                     </div>
@@ -444,22 +622,22 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                 </div>
 
                 <div className="md:col-span-7 space-y-4 flex flex-col justify-between">
-                  <div className="bg-slate-950/90 p-5 rounded-xl border border-amber-900/40 space-y-3 font-sans">
-                    <h3 className="text-sm font-mono font-bold text-amber-300 uppercase tracking-wide flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  <div className="bg-[#030508]/90 p-5 rounded-xl border border-[#252D37] space-y-3 font-sans-ui">
+                    <h3 className="text-sm font-mono-tech font-bold text-[#D6A84F] uppercase tracking-wide flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-[#D6A84F]" />
                       SAFE UNCERTAINTY NOTICE
                     </h3>
-                    <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                    <p className="text-xs text-[#A8B0BA] leading-relaxed font-sans-ui">
                       ASTRA could not confidently validate this image as astronomical observation data. Analysis was stopped to avoid an unsupported classification.
                     </p>
-                    <div className="p-3 bg-amber-950/30 rounded border border-amber-500/20 text-xs font-mono text-amber-200">
+                    <div className="p-3 bg-[#3A2B15]/30 rounded border border-[#D6A84F]/20 text-xs font-mono-tech text-[#D6A84F]">
                       Safety Rule Enforced: No confident Galaxy Zoo morphology classification was performed for ambiguous inputs.
                     </div>
                   </div>
 
                   <button
                     onClick={resetUpload}
-                    className="w-full py-3 rounded bg-slate-900 hover:bg-slate-800 text-slate-200 font-mono text-xs font-bold border border-slate-700 transition-all cursor-pointer"
+                    className="w-full py-3 rounded bg-[#151B23] hover:bg-[#252D37] text-[#F2F4F7] font-mono-tech text-xs font-bold border border-[#252D37] transition-all cursor-pointer"
                   >
                     TRY ANOTHER IMAGE
                   </button>

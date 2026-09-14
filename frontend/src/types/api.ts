@@ -80,3 +80,21 @@ export interface DomainValidationGate {
   status: DomainValidationStatus;
   message: string;
 }
+
+export interface SpaceAIRequest {
+  question: string;
+  observation_context?: Record<string, any> | null;
+  conversation_history?: Array<{ sender: string; content: string; role?: string }> | null;
+  image_base64?: string | null;
+}
+
+export interface SpaceAIResponse {
+  answer: string;
+  scope: 'observation' | 'astronomy' | 'astra' | 'redirect' | 'error';
+  observation_id?: string | null;
+  grounded: boolean;
+  available: boolean;
+  model: string;
+  provider: string;
+  error?: string | null;
+}

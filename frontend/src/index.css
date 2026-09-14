@@ -2,18 +2,26 @@
 
 @layer base {
   :root {
-    --bg-dark: #03060f;
-    --card-bg: rgba(10, 16, 31, 0.75);
-    --border-cyan: rgba(121, 220, 232, 0.25);
-    --accent-cyan: #79DCE8;
-    --accent-teal: #22d3ee;
-    --accent-amber: #f59e0b;
-    --accent-crimson: #ef4444;
+    --bg-space-black: #030508;
+    --bg-deep-space: #070B11;
+    --bg-graphite: #0D1219;
+    --bg-charcoal: #151B23;
+    --bg-gunmetal: #252D37;
+    --border-steel: #4B5563;
+    --text-dark-silver: #717985;
+    --text-silver: #A8B0BA;
+    --text-platinum: #D5DAE0;
+    --text-moonlight: #F2F4F7;
+    --accent-lunar-silver: #C7CDD5;
+    --accent-ice-blue: #8FAFC2;
+    --accent-stellar-blue: #66869A;
+    --accent-amber: #D6A84F;
+    --accent-green: #5FC7A1;
   }
 
   body {
-    background-color: var(--bg-dark);
-    color: #f3f4f6;
+    background-color: var(--bg-space-black);
+    color: var(--text-moonlight);
     font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow-x: hidden;
   }
@@ -32,13 +40,17 @@
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
-/* Glassmorphism & Observatory UI Panels */
+/* Space-Agency Titanium & Observatory UI Panels */
 .glass-panel {
-  background: rgba(8, 14, 29, 0.75);
+  background: linear-gradient(
+    135deg,
+    rgba(21, 27, 35, 0.85),
+    rgba(13, 18, 25, 0.90)
+  );
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(121, 220, 232, 0.18);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(199, 205, 213, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.65), 0 0 24px rgba(210, 220, 230, 0.04);
 }
 
 .glass-panel-hover {
@@ -46,14 +58,14 @@
 }
 
 .glass-panel-hover:hover {
-  border-color: rgba(121, 220, 232, 0.45);
-  box-shadow: 0 0 25px rgba(121, 220, 232, 0.25);
+  border-color: rgba(213, 218, 224, 0.45);
+  box-shadow: 0 0 25px rgba(213, 218, 224, 0.12);
   transform: translateY(-1px);
 }
 
 .star-grid {
   background-image: 
-    radial-gradient(rgba(121, 220, 232, 0.09) 1px, transparent 0),
+    radial-gradient(rgba(199, 205, 213, 0.12) 1px, transparent 0),
     radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
   background-position: 0 0, 25px 25px;
   background-size: 50px 50px;
@@ -62,13 +74,13 @@
 /* Atmospheric Vignette & Grid Scanline Overlay */
 .scanline-overlay {
   background: linear-gradient(
-    rgba(18, 16, 16, 0) 50%, 
-    rgba(0, 0, 0, 0.25) 50%
+    rgba(7, 11, 17, 0) 50%, 
+    rgba(3, 5, 8, 0.35) 50%
   ), linear-gradient(
     90deg,
-    rgba(255, 0, 0, 0.02),
-    rgba(0, 255, 0, 0.01),
-    rgba(0, 0, 255, 0.02)
+    rgba(255, 255, 255, 0.01),
+    rgba(143, 175, 194, 0.01),
+    rgba(0, 0, 0, 0.02)
   );
   background-size: 100% 4px, 6px 100%;
 }
@@ -129,8 +141,8 @@
 /* Stagger Animation Delays */
 .delay-100 { animation-delay: 0.1s; }
 .delay-200 { animation-delay: 0.2s; }
-.delay-300 { animation-delay: 0.3s; }
-.delay-400 { animation-delay: 0.4s; }
+.delay-[#8FAFC2]` { animation-delay: 0.3s; }
+.delay-[#C7CDD5]` { animation-delay: 0.4s; }
 .delay-500 { animation-delay: 0.5s; }
 
 /* Reduced Motion Override */
@@ -152,12 +164,12 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #03060f;
+  background: #030508;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #252D37;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #79DCE8;
+  background: #C7CDD5;
 }

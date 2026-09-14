@@ -16,7 +16,7 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
         return 'bg-amber-950/70 text-amber-400 border-amber-500/40';
       case 'LOW':
       default:
-        return 'bg-slate-900/80 text-cyan-400 border-cyan-500/30';
+        return 'bg-[#151B23] text-[#D5DAE0] border-[#4B5563]/50';
     }
   };
 
