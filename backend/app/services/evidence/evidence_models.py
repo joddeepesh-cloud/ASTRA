@@ -64,14 +64,25 @@ class PhotometryEvidence(BaseModel):
 class TimeSeriesEvidence(BaseModel):
     """TESS / Kepler light curve time-series evidence."""
     available: bool = False
-    mission: Optional[str] = None
+    mission: Optional[str] = "TESS"
     sector: Optional[int] = None
+    target_name: Optional[str] = None
+    time_series_status: str = Field(default="NO_TIME_SERIES_AVAILABLE", description="'NO_TIME_SERIES_AVAILABLE', 'TIME_SERIES_FOUND', 'TRANSIT_LIKE_SIGNAL', 'VARIABLE_STAR_SIGNAL'")
+    signal_hint: str = Field(default="INSUFFICIENT_DATA")
+    observation_count: int = 0
+    baseline_duration_days: Optional[float] = None
+    period_days: Optional[float] = None
+    transit_depth: Optional[float] = None
+    transit_duration_hours: Optional[float] = None
+    transit_snr: Optional[float] = None
+    source_id: Optional[str] = None
     time: List[float] = Field(default_factory=list)
     flux: List[float] = Field(default_factory=list)
     quality: List[int] = Field(default_factory=list)
-    source_id: Optional[str] = None
-    status: str = Field(default="NO_LIGHT_CURVE_AVAILABLE", description="'NO_LIGHT_CURVE_AVAILABLE', 'LIGHT_CURVE_AVAILABLE', 'LIGHT_CURVE_ANALYSIS_COMPLETED'")
-    signal_hint: str = Field(default="INSUFFICIENT_DATA", description="'TRANSIT_LIKE_SIGNAL', 'PERIODIC_VARIABILITY', 'TRANSIENT_LIKE_VARIATION', 'NO_SIGNIFICANT_PERIODIC_SIGNAL', 'INSUFFICIENT_DATA'")
+
+    @property
+    def status(self) -> str:
+        return self.time_series_status
 
 class ExoplanetEvidence(BaseModel):
     """NASA Exoplanet Archive host and transit evidence."""
@@ -80,10 +91,15 @@ class ExoplanetEvidence(BaseModel):
     known_planet: bool = False
     candidate: bool = False
     planet_name: Optional[str] = None
+    hostname: Optional[str] = None
+    discovery_method: Optional[str] = None
+    disposition: Optional[str] = None
     orbital_period_days: Optional[float] = None
+    transit_depth: Optional[float] = None
     transit_depth_ppm: Optional[float] = None
-    catalog_identifiers: Dict[str, str] = Field(default_factory=dict)
+    exoplanet_status: str = Field(default="NO_CATALOG_MATCH", description="'NO_CATALOG_MATCH', 'KNOWN_EXOPLANET_MATCH', 'KNOWN_HOST_STAR', 'CANDIDATE_HOST'")
     match_distance_arcsec: Optional[float] = None
+
 
 class NebulaEvidence(BaseModel):
     """Diffuse nebula / emission line catalog evidence."""

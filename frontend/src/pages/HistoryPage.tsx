@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { AnalysisHistoryRecord, Observation } from '../types';
 import libraryData from '../data/observationLibrary.json';
 import { getAnalysisHistory } from '../services/analysisHistory';
+import { getImageBlob } from '../services/imageStore';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { EmptyState } from '../components/EmptyState';
 import { History, Filter, CheckCircle2, AlertTriangle, XCircle, ExternalLink, ShieldCheck, Database, Inbox } from 'lucide-react';
@@ -14,6 +15,20 @@ interface HistoryPageProps {
 
 export const HistoryPage: React.FC<HistoryPageProps> = ({ onInspectObservation }) => {
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const createdObjectUrlsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    return () => {
+      createdObjectUrlsRef.current.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          // ignore
+        }
+      });
+      createdObjectUrlsRef.current = [];
+    };
+  }, []);
 
   const allRecords = getAnalysisHistory();
 
@@ -22,34 +37,46 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ onInspectObservation }
     return rec.status === filterStatus;
   });
 
-  const handleInspect = (record: AnalysisHistoryRecord) => {
-    // Find matching observation from library dataset or synthesize
+  const handleInspect = async (record: AnalysisHistoryRecord) => {
     const found = LIBRARY_OBSERVATIONS.find((o) => o.id === record.observation_id);
-    if (found && onInspectObservation) {
-      onInspectObservation(found);
-    } else if (onInspectObservation) {
-      // Synthesize observation object from record
+    let resolvedImageUrl = found ? found.image_url : record.image_url || '';
+
+    if (!resolvedImageUrl && record.image_key) {
+      try {
+        const blob = await getImageBlob(record.image_key);
+        if (blob) {
+          resolvedImageUrl = URL.createObjectURL(blob);
+          createdObjectUrlsRef.current.push(resolvedImageUrl);
+        }
+      } catch (err) {
+        console.warn('Could not retrieve image Blob from IndexedDB:', err);
+      }
+    }
+
+    if (onInspectObservation) {
       const syntheticObs: Observation = {
         id: record.observation_id,
-        dr7objid: 'USER-UPLOADED-FILE',
-        asset_id: 999999,
-        ra: 0.0,
-        dec: 0.0,
+        dr7objid: record.source === 'LIBRARY' ? (found?.dr7objid || 'LIBRARY-TARGET') : (record.filename || 'USER-UPLOADED-FILE'),
+        asset_id: found ? found.asset_id : 999999,
+        ra: record.triage_response?.ra ?? (found ? found.ra : 0.0),
+        dec: record.triage_response?.dec ?? (found ? found.dec : 0.0),
         gz2class: record.morphology,
-        broad_morphology: record.morphology === 'SPIRAL' ? 'SPIRAL' : record.morphology === 'SMOOTH' ? 'SMOOTH' : 'DISK_FEATURE',
-        object_type: (record.object_type === 'GALAXY' || record.object_type === 'Galaxy' || record.filename?.startsWith('LIB-')) ? 'Galaxy' : 'Unresolved astronomical source',
+        broad_morphology: (record.morphology === 'SPIRAL' ? 'SPIRAL' : record.morphology === 'SMOOTH' ? 'SMOOTH' : record.morphology === 'FEATURED_DISK' ? 'FEATURED_DISK' : record.morphology === 'EDGE_ON' ? 'EDGE_ON' : 'OTHER') as any,
+        object_type: (record.object_type || (record.filename?.startsWith('LIB-') ? 'Galaxy' : 'Unresolved astronomical source')) as any,
         confidence: record.confidence,
         anomaly_score: record.triage_score,
         ood_score: record.triage_score,
         priority: record.priority,
         catalog_status: 'UNCHECKED',
         observation_time: record.timestamp,
-        image_url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23070B11"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%238FAFC2" font-size="10" font-family="monospace">USER FILE</text></svg>',
-        explanation: `Analysis run ${record.id} processed under source ${record.source}. Domain status: ${record.domain_status}.`,
+        image_url: resolvedImageUrl,
+        explanation: record.triage_response?.explanation || `Historical analysis run ${record.id} processed under source ${record.source}. Domain status: ${record.domain_status}.`,
         morphology_probs: [
           { label: record.morphology, probability: record.confidence }
         ],
-        is_demo: false
+        triage_response: record.triage_response,
+        is_demo: false,
+        is_live: record.source === 'RESEARCH_UPLOAD'
       };
       onInspectObservation(syntheticObs);
     }

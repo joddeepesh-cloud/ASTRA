@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ActiveTab, Observation } from '../types';
 import { Sidebar } from '../components/Sidebar';
 import { TopBar } from '../components/TopBar';
 import { ToastContainer } from '../components/ToastContainer';
 import { MissionBriefingPage } from '../pages/MissionBriefingPage';
-import { ObservationsPage } from '../pages/ObservationsPage';
 import { ObservationLibraryPage } from '../pages/ObservationLibraryPage';
 import { ObservationDetailPage } from '../pages/ObservationDetailPage';
 import { ResearchModePage } from '../pages/ResearchModePage';
@@ -29,9 +28,98 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
   const [selectedObservation, setSelectedObservation] = useState<Observation>(() => (libraryData as Observation[])[0]);
 
+  const navigateToTab = (tab: ActiveTab, obs?: Observation, replace = false) => {
+    const targetTab: ActiveTab = (tab as string) === 'observations' ? 'anomalies' : tab;
+    setActiveTab(targetTab);
+    if (obs) {
+      setSelectedObservation(obs);
+    }
+
+    if (typeof window !== 'undefined') {
+      const currentIndex = window.history.state?.index ?? 0;
+      const nextIndex = replace ? currentIndex : currentIndex + 1;
+      const stateObj = { tab: targetTab, obsId: obs?.id || (targetTab === 'detail' ? selectedObservation.id : undefined), index: nextIndex };
+      const hash = `#${targetTab}${targetTab === 'detail' ? '/' + (obs?.id || selectedObservation.id) : ''}`;
+
+      if (replace) {
+        window.history.replaceState(stateObj, '', hash);
+      } else {
+        window.history.pushState(stateObj, '', hash);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const parseHash = () => {
+      if (typeof window === 'undefined') return;
+      const hash = window.location.hash.replace(/^#\/?/, '');
+      if (!hash) return;
+
+      const [rawTab, obsId] = hash.split('/');
+      let tab: ActiveTab = 'briefing';
+      if (rawTab === 'observations' || rawTab === 'anomalies') tab = 'anomalies';
+      else if (rawTab === 'library') tab = 'library';
+      else if (rawTab === 'detail') tab = 'detail';
+      else if (rawTab === 'research') tab = 'research';
+      else if (rawTab === 'history') tab = 'history';
+      else if (rawTab === 'copilot') tab = 'copilot';
+      else if (rawTab === 'settings') tab = 'settings';
+      else if (rawTab === 'briefing') tab = 'briefing';
+
+      setActiveTab(tab);
+
+      if (obsId) {
+        const match = (libraryData as Observation[]).find((o) => o.id === obsId);
+        if (match) {
+          setSelectedObservation(match);
+        }
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      if (window.location.hash) {
+        parseHash();
+      } else {
+        window.history.replaceState({ tab: initialTab, index: 0 }, '', `#${initialTab}`);
+      }
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state && e.state.tab) {
+        const tab: ActiveTab = e.state.tab === 'observations' ? 'anomalies' : e.state.tab;
+        setActiveTab(tab);
+        if (e.state.obsId) {
+          const match = (libraryData as Observation[]).find((o) => o.id === e.state.obsId);
+          if (match) {
+            setSelectedObservation(match);
+          }
+        }
+      } else {
+        parseHash();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [initialTab]);
+
+  const handleGoBack = () => {
+    if (typeof window !== 'undefined' && window.history.state && window.history.state.index > 0) {
+      window.history.back();
+    } else {
+      // Safe internal fallback navigation
+      if (activeTab === 'detail') {
+        navigateToTab('anomalies', undefined, true);
+      } else {
+        navigateToTab('briefing', undefined, true);
+      }
+    }
+  };
+
   const handleInspectObservation = (obs: Observation) => {
-    setSelectedObservation(obs);
-    setActiveTab('detail');
+    navigateToTab('detail', obs);
   };
 
   const handleInspectLiveResult = (result: TriageResponse, _file: File, previewUrl: string) => {
@@ -77,9 +165,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
       triage_response: result
     };
 
-    setSelectedObservation(liveObs);
     recordLiveAnalysis(result, _file.name, liveObs.id);
-    setActiveTab('detail');
+    navigateToTab('detail', liveObs);
   };
 
   const handleInspectObservationById = (obsId: string) => {
@@ -137,8 +224,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
     switch (activeTab) {
       case 'briefing':
         return { title: 'Mission Briefing', subtitle: 'Launchpad for ASTRA astronomical triage & scientific discovery' };
-      case 'observations':
-        return { title: 'Observations', subtitle: 'Monitor recent astronomical observations and mission priorities' };
       case 'library':
         return { title: 'Observation Library', subtitle: 'Explore astronomical observations and learn more about survey structures' };
       case 'anomalies':
@@ -167,7 +252,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => navigateToTab(tab)}
         onGoToLanding={onGoToLanding}
       />
 
@@ -176,17 +261,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
         <TopBar
           title={title}
           subtitle={subtitle}
-          onSearchClick={() => setActiveTab('library')}
+          onSearchClick={() => navigateToTab('library')}
           onInspectObservationById={handleInspectObservationById}
         />
 
         <main className="flex-1 min-h-0 overflow-y-auto relative">
           {activeTab === 'briefing' && (
-            <MissionBriefingPage onNavigateTab={(tab) => setActiveTab(tab)} />
-          )}
-
-          {activeTab === 'observations' && (
-            <ObservationsPage onAnalyze={handleInspectObservation} />
+            <MissionBriefingPage onNavigateTab={(tab) => navigateToTab(tab)} />
           )}
 
           {activeTab === 'library' && (
@@ -200,7 +281,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
           {activeTab === 'detail' && (
             <ObservationDetailPage
               observation={selectedObservation}
-              onBack={() => setActiveTab('briefing')}
+              onBack={handleGoBack}
             />
           )}
 
@@ -224,4 +305,3 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
     </div>
   );
 };
-

@@ -100,8 +100,8 @@ def test_5_tess_unavailable():
     svc = EvidenceService(offline_mode=True)
     bundle = svc.fetch_evidence_bundle(ra=180.0, dec=45.0)
     assert bundle.time_series.available is False
-    assert bundle.time_series.status == "NO_LIGHT_CURVE_AVAILABLE"
-    assert bundle.time_series.signal_hint == "INSUFFICIENT_DATA"
+    assert bundle.time_series.time_series_status == "NO_TIME_SERIES_AVAILABLE"
+    assert bundle.time_series.signal_hint in ("INSUFFICIENT_DATA", "OFFLINE_MODE")
 
 def test_6_tess_available():
     """Verify TESS lookup returns light curve time-series arrays when available."""

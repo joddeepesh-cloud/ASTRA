@@ -179,6 +179,42 @@ export const EvidenceEnrichmentPanel: React.FC<EvidenceEnrichmentPanelProps> = (
         </div>
       </div>
 
+      {/* EXOPLANET / TRANSIT EVIDENCE SECTION */}
+      <div className="p-3 bg-slate-950/80 rounded-lg border border-slate-800 space-y-2">
+        <div className="text-[11px] font-bold text-cyan-300 uppercase tracking-wider flex items-center justify-between">
+          <span>EXOPLANET / TRANSIT EVIDENCE</span>
+          <span className="text-[10px] text-slate-400 font-normal">
+            Status: {evidence?.fused_result?.exoplanet_evidence_status || 'NO_CATALOG_MATCH'}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px]">
+          <div className="p-2 bg-slate-900 rounded border border-slate-800/60">
+            <span className="text-slate-400 block">Light Curve</span>
+            <span className="text-slate-200 font-bold">
+              {contributing.includes('TESS') ? 'AVAILABLE' : 'NO DATA'}
+            </span>
+          </div>
+          <div className="p-2 bg-slate-900 rounded border border-slate-800/60">
+            <span className="text-slate-400 block">Transit Signal</span>
+            <span className="text-slate-200 font-bold">
+              {fusedType?.includes('EXOPLANET') ? 'TRANSIT LIKE' : 'INSUFFICIENT'}
+            </span>
+          </div>
+          <div className="p-2 bg-slate-900 rounded border border-slate-800/60">
+            <span className="text-slate-400 block">Period Candidate</span>
+            <span className="text-slate-200 font-bold">
+              {evidence?.fused_result?.orbital_period_days ? `${evidence.fused_result.orbital_period_days} d` : 'N/A'}
+            </span>
+          </div>
+          <div className="p-2 bg-slate-900 rounded border border-slate-800/60">
+            <span className="text-slate-400 block">NASA Archive</span>
+            <span className="text-slate-200 font-bold">
+              {contributing.includes('NASA Exoplanet Archive') ? 'MATCHED' : 'NO MATCH'}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Conflicts Banner if Any */}
       {conflicts.length > 0 && (
         <div className="p-3 bg-rose-950/60 border border-rose-500/50 rounded-lg text-rose-200 text-[11px] space-y-1">

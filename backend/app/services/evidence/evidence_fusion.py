@@ -131,6 +131,7 @@ class EvidenceFusionEngine:
         s_spectro = bundle.spectroscopy
         w_photo = bundle.photometry
         exo_ev = bundle.exoplanet
+        ts_ev = bundle.time_series
 
         # Stellar evidence strength evaluation
         has_strong_star = False
@@ -161,14 +162,61 @@ class EvidenceFusionEngine:
                 quasar_strength = "MODERATE"
 
         # Exoplanet catalog status
-        exo_status = "NO_CATALOG_MATCH"
+        exo_status = exo_ev.exoplanet_status if exo_ev.available else "NO_CATALOG_MATCH"
         if exo_ev.available:
             if exo_ev.known_planet:
                 exo_status = f"KNOWN_CATALOG_PLANET ({exo_ev.planet_name or 'Exoplanet'})"
             elif exo_ev.known_host:
                 exo_status = "KNOWN_CATALOG_HOST_STAR"
+            elif exo_ev.candidate:
+                exo_status = "CANDIDATE_HOST"
 
-        # 1. CONFLICT DETECTION: Both decisive stellar and decisive quasar evidence exist
+        # Check for confirmed exoplanet match from NASA Exoplanet Archive
+        is_known_exoplanet = exo_ev.available and (exo_ev.known_planet or exo_ev.exoplanet_status in ("KNOWN_EXOPLANET_MATCH", "CONFIRMED"))
+        
+        # Check for exoplanet candidate (TOI/Kepler candidate or transit-like light curve signal)
+        is_exoplanet_candidate = (
+            (exo_ev.available and (exo_ev.candidate or exo_ev.exoplanet_status == "CANDIDATE")) or
+            (ts_ev.available and ts_ev.time_series_status == "TRANSIT_LIKE_SIGNAL")
+        )
+
+        # 1. KNOWN EXOPLANET MATCH DECISION
+        if is_known_exoplanet:
+            planet_info = f" ({exo_ev.planet_name})" if exo_ev.planet_name else ""
+            period_info = f", Period: {exo_ev.orbital_period_days:.2f} d" if exo_ev.orbital_period_days else ""
+            return FusedEvidenceResult(
+                target_decision="KNOWN_EXOPLANET_MATCH",
+                primary_rationale=f"Target cross-matched with confirmed exoplanet record in NASA Exoplanet Archive{planet_info}{period_info}.",
+                evidence_level="DECISIVE",
+                match_quality=match_quality,
+                is_conflicting=False,
+                image_evidence_type="POINT_SOURCE",
+                stellar_evidence_strength=star_strength if has_strong_star else "STRONG",
+                quasar_evidence_strength="NONE",
+                exoplanet_evidence_status=f"KNOWN_EXOPLANET_MATCH ({exo_ev.planet_name or 'Confirmed Planet'})",
+                provenance_chain=prov_chain,
+                scientific_disclaimer="Confirmed exoplanet cross-match from NASA Exoplanet Archive TAP service."
+            )
+
+        # 2. EXOPLANET CANDIDATE DECISION
+        if is_exoplanet_candidate and not has_strong_quasar:
+            cand_info = f" ({exo_ev.planet_name})" if exo_ev.planet_name else ""
+            depth_info = f", Transit Depth: {ts_ev.transit_depth:.4f}%" if ts_ev.transit_depth else ""
+            return FusedEvidenceResult(
+                target_decision="EXOPLANET_CANDIDATE",
+                primary_rationale=f"Point source associated with planetary candidate or photometric transit-like light curve signal{cand_info}{depth_info}.",
+                evidence_level="STRONG" if (ts_ev.transit_depth or exo_ev.candidate) else "MODERATE",
+                match_quality=match_quality,
+                is_conflicting=False,
+                image_evidence_type="POINT_SOURCE",
+                stellar_evidence_strength=star_strength if has_strong_star else "STRONG",
+                quasar_evidence_strength="NONE",
+                exoplanet_evidence_status="EXOPLANET_CANDIDATE",
+                provenance_chain=prov_chain,
+                scientific_disclaimer="Exoplanet candidate signal requires further high-cadence spectroscopic or transit follow-up."
+            )
+
+        # 3. CONFLICT DETECTION: Both decisive stellar and decisive quasar evidence exist
         if has_strong_star and has_strong_quasar:
             return FusedEvidenceResult(
                 target_decision="CONFLICTING_POINT_SOURCE_EVIDENCE",
@@ -184,7 +232,7 @@ class EvidenceFusionEngine:
                 scientific_disclaimer="Preserved in conservative conflicting state. Requires manual expert review."
             )
 
-        # 2. STAR DECISION: Strong stellar evidence, no quasar evidence
+        # 4. STAR DECISION: Strong stellar evidence, no quasar evidence
         if has_strong_star and not has_strong_quasar:
             has_both_pm = g_astrom.proper_motion_ra_mas_yr is not None and g_astrom.proper_motion_dec_mas_yr is not None
             pm_str = f" (Proper Motion: RA {g_astrom.proper_motion_ra_mas_yr:.1f}, DEC {g_astrom.proper_motion_dec_mas_yr:.1f} mas/yr)" if has_both_pm else ""
@@ -203,7 +251,7 @@ class EvidenceFusionEngine:
                 scientific_disclaimer="Classification supported by unresolved point-source imaging and Gaia DR3 astrometry."
             )
 
-        # 3. QUASAR CANDIDATE DECISION: Strong quasar evidence, no stellar evidence
+        # 5. QUASAR CANDIDATE DECISION: Strong quasar evidence, no stellar evidence
         if has_strong_quasar and not has_strong_star:
             z_str = f" (Redshift z = {s_spectro.redshift:.3f})" if s_spectro.redshift else ""
             return FusedEvidenceResult(
@@ -220,7 +268,7 @@ class EvidenceFusionEngine:
                 scientific_disclaimer="Classification supported by point-source imaging and SDSS spectroscopic evidence."
             )
 
-        # 4. AMBIGUOUS POINT SOURCE (Default conservative decision)
+        # 6. AMBIGUOUS POINT SOURCE (Default conservative decision)
         reason = "Unresolved compact point source. Multi-modal evidence is insufficient to reliably separate stellar and quasar interpretations without spectroscopy or astrometry."
         if has_wise_quasar_color:
             reason += f" (WISE W1-W2={w_photo.w1_minus_w2:.2f} mag suggests IR excess, but spectroscopy/astrometry is required)."

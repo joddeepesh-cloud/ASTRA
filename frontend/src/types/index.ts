@@ -4,14 +4,17 @@ export type BroadMorphology = 'SMOOTH' | 'EDGE_ON' | 'FEATURED_DISK' | 'SPIRAL' 
 export type ObjectType = 'Galaxy' | 'GALAXY' | 'Star' | 'Quasar' | 'Unresolved astronomical source' | 'Astronomical object — type unresolved' | 'Unknown';
 export type PriorityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type CatalogMatchStatus = 'MATCHED' | 'WEAK_MATCH' | 'NO_MATCH' | 'UNCHECKED';
-export type ActiveTab = 'landing' | 'briefing' | 'observations' | 'anomalies' | 'library' | 'detail' | 'research' | 'copilot' | 'history' | 'settings';
+export type ActiveTab = 'landing' | 'briefing' | 'anomalies' | 'library' | 'detail' | 'research' | 'copilot' | 'history' | 'settings';
 
 export interface AnalysisHistoryRecord {
-  id: string; // e.g. "HIST-20260913-001"
+  id: string; // e.g. "HIST-20260917-8F92A10C"
+  run_id?: string;
   timestamp: string; // ISO string
-  source: 'SIMULATION_STREAM' | 'RESEARCH_UPLOAD' | 'SURVEY_INGEST';
+  source: 'SIMULATION_STREAM' | 'RESEARCH_UPLOAD' | 'SURVEY_INGEST' | 'LIBRARY';
   observation_id: string;
   filename: string;
+  image_key?: string;
+  image_url?: string;
   domain_status: 'COMPATIBLE' | 'UNCERTAIN' | 'INCOMPATIBLE';
   object_type?: string;
   morphology: string;
@@ -20,6 +23,7 @@ export interface AnalysisHistoryRecord {
   priority: PriorityLevel;
   status: 'COMPLETED' | 'FLAGGED_FOR_REVIEW' | 'REJECTED';
   is_demo: boolean;
+  triage_response?: TriageResponse;
 }
 
 export interface Observation {

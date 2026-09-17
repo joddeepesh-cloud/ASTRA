@@ -94,7 +94,7 @@ class EvidenceService:
             provenance.extend(t_prov)
         except Exception as e:
             logger.error(f"TESS adapter exception: {e}")
-            ts = TimeSeriesEvidence(available=False, status="NO_LIGHT_CURVE_AVAILABLE", signal_hint="INSUFFICIENT_DATA")
+            ts = TimeSeriesEvidence(available=False, time_series_status="NO_TIME_SERIES_AVAILABLE", signal_hint="INSUFFICIENT_DATA")
 
         # 5. NASA Exoplanet Archive
         try:

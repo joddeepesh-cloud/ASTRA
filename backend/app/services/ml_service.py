@@ -168,52 +168,18 @@ class MLService:
                 }
             }
 
-        # Handle STAGE 1 UNCERTAIN
-        if sem_result.status == "SEMANTIC_UNCERTAIN":
-            t1 = time.perf_counter()
-            dom_meta = {
-                "probability_astronomical": float(sem_result.astronomical_score),
-                "probability_non_astronomical": float(sem_result.competing_score),
-                "decision": "UNCERTAIN",
-                "model_version": self.domain_gate_model_version,
-                "inference_time_ms": sem_result.latency_ms,
-                "semantic_gate_status": sem_result.status,
-                "semantic_astronomical_score": sem_result.astronomical_score,
-                "semantic_competing_score": sem_result.competing_score,
-                "semantic_margin": sem_result.semantic_margin,
-                "semantic_reason": sem_result.reason
-            }
-            return {
-                "domain_validation": dom_meta,
-                "predicted_object_type": "INCOMPATIBLE",
-                "object_type_confidence": None,
-                "object_type_status": "UNAVAILABLE",
-                "user_selected_study_type": user_selected_study_type,
-                "object_type": "INCOMPATIBLE",
-                "morphology": None,
-                "explanation": "This image could not be confidently verified as compatible with ASTRA's astronomical observation domain. No astronomical classification was performed.",
-                "model_version": self.model_version_str,
-                "inference_time_ms": sem_result.latency_ms,
-                "total_triage_ms": round((t1 - t0) * 1000.0, 2),
-                "score_interpretation": "Semantic validation uncertain; image cannot be verified as astronomical observation data.",
-                "stage_timings_ms": {
-                    "semantic_gate": sem_ms,
-                    "domain_gate": 0.0,
-                    "object_identification": 0.0,
-                    "galaxy_morphology": 0.0,
-                    "embedding_anomaly": 0.0,
-                    "triage_calculation": 0.0,
-                    "total_pipeline": round((t1 - t0) * 1000.0, 2)
-                }
-            }
-
-        # STAGE 2: Execute Domain Gate V2 (Only when Stage 1 is SEMANTIC_COMPATIBLE)
+        # STAGE 2: Execute Domain Gate V2
         t_dom_0 = time.perf_counter()
         v2_result = self.domain_gate.predict(image)
         t_dom_1 = time.perf_counter()
         dom_ms = round((t_dom_1 - t_dom_0) * 1000.0, 2)
 
         decision_v2 = v2_result.get("decision", "INCOMPATIBLE")
+
+        # Override decision to UNCERTAIN if Semantic Gate was UNCERTAIN but not INCOMPATIBLE
+        if sem_result.status == "SEMANTIC_UNCERTAIN" and decision_v2 == "COMPATIBLE":
+            decision_v2 = "UNCERTAIN"
+            v2_result["decision"] = "UNCERTAIN"
 
         # Attach semantic gate metadata to domain_validation
         v2_result["semantic_gate_status"] = sem_result.status
@@ -223,8 +189,8 @@ class MLService:
         v2_result["semantic_reason"] = sem_result.reason
         v2_result["inference_time_ms"] = round(v2_result["inference_time_ms"] + sem_result.latency_ms, 2)
 
-        # Handle STAGE 2 INCOMPATIBLE / UNCERTAIN
-        if decision_v2 in ("INCOMPATIBLE", "UNCERTAIN"):
+        # Rejection occurs ONLY when both Domain Gate V2 and Semantic Gate reject the payload as non-astronomical
+        if decision_v2 == "INCOMPATIBLE" and sem_result.status == "SEMANTIC_INCOMPATIBLE":
             t1 = time.perf_counter()
             return {
                 "domain_validation": v2_result,
@@ -238,7 +204,7 @@ class MLService:
                 "model_version": self.model_version_str,
                 "inference_time_ms": v2_result["inference_time_ms"],
                 "total_triage_ms": round((t1 - t0) * 1000.0, 2),
-                "score_interpretation": "Domain Gate V2 validation failed or uncertain; image is outside ASTRA astronomical observation domain.",
+                "score_interpretation": "Domain validation failed; image is outside ASTRA astronomical observation domain.",
                 "stage_timings_ms": {
                     "semantic_gate": sem_ms,
                     "domain_gate": dom_ms,

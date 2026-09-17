@@ -10,7 +10,8 @@ import { ConfidenceBar } from './ConfidenceBar';
 import { PriorityBadge } from './PriorityBadge';
 import { TriageExplanation } from './TriageExplanation';
 import { ObservationLibraryPicker } from './ObservationLibraryPicker';
-import { recordLiveAnalysis } from '../services/analysisHistory';
+import { recordAnalysis } from '../services/analysisHistory';
+import { saveImageBlob } from '../services/imageStore';
 
 type UploadState = 'idle' | 'validating' | 'analyzing' | 'success' | 'error';
 type InputSource = 'upload' | 'library';
@@ -98,6 +99,14 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
       const result = await triageImage(file, controller.signal);
       setTriageResult(result);
       setState('success');
+
+      // Save original uploaded image Blob to IndexedDB for persistent history reconstruction
+      const obsId = result.observation_id || `OBS-${Date.now().toString(36).toUpperCase()}`;
+      const imageKey = `IMG-${obsId}`;
+      await saveImageBlob(imageKey, file);
+
+      // Record in Session Analysis History
+      await recordAnalysis(result, file.name, obsId, 'RESEARCH_UPLOAD', imageKey);
     } catch (err: any) {
       setErrorMessage(err.message || "ASTRA's analysis service is currently unavailable. Live analysis cannot be performed.");
       setState('error');
@@ -128,13 +137,13 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
 
       setState('analyzing');
 
-      // Submit to real ASTRA FastAPI /triage backend (Library targets are verified Galaxy Zoo observations)
+      // Submit to real ASTRA FastAPI /triage backend
       const result = await triageImage(file, controller.signal, obs.object_type || 'GALAXY');
       setTriageResult(result);
       setState('success');
 
-      // Record in Session Analysis History ONLY on successful analysis execution
-      recordLiveAnalysis(result, filename, obs.id);
+      // Record in Session Analysis History
+      await recordAnalysis(result, filename, obs.id, 'LIBRARY', obs.image_url);
     } catch (err: any) {
       setErrorMessage(err.message || "ASTRA analysis could not be completed for the selected library observation.");
       setState('error');
@@ -389,21 +398,38 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
       {/* SUCCESS State with Real Backend Triage Result */}
       {state === 'success' && triageResult && (
         <div className="space-y-6">
-          {/* Domain COMPATIBLE View */}
-          {triageResult.domain_validation?.decision === 'COMPATIBLE' && (
+          {/* Domain COMPATIBLE or UNCERTAIN View */}
+          {(triageResult.domain_validation?.decision === 'COMPATIBLE' || triageResult.domain_validation?.decision === 'UNCERTAIN') && (
             <div className="space-y-6">
-              <div className="p-4 rounded-xl bg-[#0E241B] border border-[#5FC7A1]/40 flex items-center justify-between font-mono-tech text-xs">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#5FC7A1] shrink-0" />
-                  <div>
-                    <span className="font-bold text-[#5FC7A1] uppercase block">ASTRONOMICAL DOMAIN COMPATIBLE</span>
-                    <span className="text-[#A8B0BA] font-sans-ui text-[11px]">{triageResult.domain_validation.semantic_reason || 'Verified as astronomical imagery by onboard domain gate.'}</span>
+              {triageResult.domain_validation?.decision === 'COMPATIBLE' ? (
+                <div className="p-4 rounded-xl bg-[#0E241B] border border-[#5FC7A1]/40 flex items-center justify-between font-mono-tech text-xs">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#5FC7A1] shrink-0" />
+                    <div>
+                      <span className="font-bold text-[#5FC7A1] uppercase block">ASTRONOMICAL DOMAIN COMPATIBLE</span>
+                      <span className="text-[#A8B0BA] font-sans-ui text-[11px]">{triageResult.domain_validation.semantic_reason || 'Verified as astronomical imagery by onboard domain gate.'}</span>
+                    </div>
                   </div>
+                  {triageResult.priority_level && (
+                    <PriorityBadge priority={triageResult.priority_level} />
+                  )}
                 </div>
-                {triageResult.priority_level && (
-                  <PriorityBadge priority={triageResult.priority_level} />
-                )}
-              </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-[#3A2B15]/80 border border-[#D6A84F]/50 flex items-center justify-between font-mono-tech text-xs">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 text-[#D6A84F] shrink-0" />
+                    <div>
+                      <span className="font-bold text-[#D6A84F] uppercase block">ASTRONOMY IMAGE ACCEPTED — UNCERTAIN DOMAIN</span>
+                      <span className="text-[#A8B0BA] font-sans-ui text-[11px]">
+                        {triageResult.domain_validation?.semantic_reason || 'Recognized as astronomy-related imagery. Visual evidence preserved for multi-modal catalog enrichment.'}
+                      </span>
+                    </div>
+                  </div>
+                  {triageResult.priority_level && (
+                    <PriorityBadge priority={triageResult.priority_level} />
+                  )}
+                </div>
+              )}
 
               {/* Result Main Display Grid */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
@@ -576,58 +602,6 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                         Reason: {triageResult.domain_validation.semantic_reason}
                       </div>
                     )}
-                  </div>
-
-                  <button
-                    onClick={resetUpload}
-                    className="w-full py-3 rounded bg-[#151B23] hover:bg-[#252D37] text-[#F2F4F7] font-mono-tech text-xs font-bold border border-[#252D37] transition-all cursor-pointer"
-                  >
-                    TRY ANOTHER IMAGE
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Domain UNCERTAIN View */}
-          {triageResult.domain_validation?.decision === 'UNCERTAIN' && (
-            <div className="space-y-6 font-mono-tech">
-              <div className="p-4 rounded-xl bg-[#3A2B15]/60 border border-[#D6A84F]/50 flex items-center gap-3">
-                <AlertTriangle className="w-6 h-6 text-[#D6A84F] shrink-0" />
-                <div>
-                  <span className="text-xs text-[#D6A84F] font-bold uppercase block">
-                    DOMAIN VALIDATION UNCERTAIN
-                  </span>
-                  <span className="text-xs text-[#A8B0BA] font-sans-ui">
-                    ASTRA could not confidently validate this image as astronomical observation data. Analysis was stopped to avoid an unsupported classification.
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                <div className="md:col-span-5">
-                  {previewUrl && (
-                    <div className="aspect-square w-full rounded-lg overflow-hidden bg-black border border-[#D6A84F]/40 relative">
-                      <img src={previewUrl} alt="Uncertain observation" className="w-full h-full object-cover opacity-90" />
-                      <div className="absolute top-3 left-3 bg-[#3A2B15]/90 px-2.5 py-1 rounded text-xs font-mono-tech text-[#D6A84F] border border-[#D6A84F]/40 backdrop-blur-md">
-                        UNCERTAIN DOMAIN
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="md:col-span-7 space-y-4 flex flex-col justify-between">
-                  <div className="bg-[#030508]/90 p-5 rounded-xl border border-[#252D37] space-y-3 font-sans-ui">
-                    <h3 className="text-sm font-mono-tech font-bold text-[#D6A84F] uppercase tracking-wide flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-[#D6A84F]" />
-                      SAFE UNCERTAINTY NOTICE
-                    </h3>
-                    <p className="text-xs text-[#A8B0BA] leading-relaxed font-sans-ui">
-                      ASTRA could not confidently validate this image as astronomical observation data. Analysis was stopped to avoid an unsupported classification.
-                    </p>
-                    <div className="p-3 bg-[#3A2B15]/30 rounded border border-[#D6A84F]/20 text-xs font-mono-tech text-[#D6A84F]">
-                      Safety Rule Enforced: No confident Galaxy Zoo morphology classification was performed for ambiguous inputs.
-                    </div>
                   </div>
 
                   <button

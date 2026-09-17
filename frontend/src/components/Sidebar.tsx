@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ActiveTab } from '../types';
-import { Compass, Radio, ShieldAlert, Library, Search, Bot, History, Settings, Rocket, ExternalLink } from 'lucide-react';
+import { Compass, ShieldAlert, Library, Search, Bot, History, Settings, Rocket, ExternalLink } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -12,7 +12,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onGoT
   const menuItems: { id: ActiveTab; label: string; icon: React.ElementType; badge?: string }[] = [
     { id: 'briefing', label: 'Mission Briefing', icon: Compass },
     { id: 'research', label: 'Research & Upload', icon: Search },
-    { id: 'observations', label: 'Observations', icon: Radio },
     { id: 'anomalies', label: 'Anomaly Queue', icon: ShieldAlert },
     { id: 'library', label: 'Observation Library', icon: Library },
     { id: 'history', label: 'Analysis History', icon: History },

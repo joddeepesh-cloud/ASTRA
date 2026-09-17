@@ -226,9 +226,9 @@ class ObjectIdentificationService:
             evidence_sources = ["OpenCLIP zero-shot"]
             evidence.append(f"Visual similarity profile matches planetary candidate ({top_score:.2f})")
 
-        # 5. Low similarity threshold
+        # 5. Low similarity or ambiguous visual profile
         elif top_score < 0.22:
-            pred_type = "UNKNOWN"
+            pred_type = "ASTRONOMICAL_SOURCE_AMBIGUOUS"
             status = "INSUFFICIENT_VISUAL_EVIDENCE"
             evidence_quality = "INSUFFICIENT"
             evidence_sources = ["OpenCLIP zero-shot"]
