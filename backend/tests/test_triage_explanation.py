@@ -16,13 +16,14 @@ def test_triage_engine_canonical_equation():
 def test_triage_engine_priority_thresholds():
     """Verify canonical priority threshold boundaries."""
     thresholds = [
-        (0.29, "LOW"),
+        (0.00, "LOW"),
+        (0.2999, "LOW"),
         (0.30, "MEDIUM"),
-        (0.49, "MEDIUM"),
+        (0.4999, "MEDIUM"),
         (0.50, "HIGH"),
-        (0.69, "HIGH"),
+        (0.6999, "HIGH"),
         (0.70, "CRITICAL"),
-        (0.95, "CRITICAL")
+        (1.00, "CRITICAL")
     ]
     for score, expected_priority in thresholds:
         if score >= 0.70:

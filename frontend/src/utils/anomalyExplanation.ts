@@ -14,7 +14,7 @@ export interface StructuredAnomalyExplanation {
 export function generateAnomalyExplanation(obs: Observation): StructuredAnomalyExplanation {
   const morph = obs.broad_morphology;
   const prio = obs.priority;
-  const confPct = (obs.confidence * 100).toFixed(1);
+  const confPct = obs.confidence != null ? (obs.confidence * 100).toFixed(1) : 'N/A';
   const triageScore = obs.anomaly_score.toFixed(2);
   const oodScore = obs.ood_score ? obs.ood_score.toFixed(2) : triageScore;
 
@@ -53,7 +53,7 @@ export function generateAnomalyExplanation(obs: Observation): StructuredAnomalyE
   let whyFlagged = "";
   if (obs.anomaly_score > 0.8) {
     whyFlagged = `ASTRA's triage engine flagged this observation primarily due to high out-of-distribution divergence (OOD score: ${oodScore}). The optical profile falls outside learned standard manifold baselines.`;
-  } else if (obs.confidence < 0.75) {
+  } else if (obs.confidence != null && obs.confidence < 0.75) {
     whyFlagged = `ASTRA flagged this target due to elevated classification uncertainty (${confPct}% confidence). Overlapping morphology features present competing decision-tree hypotheses.`;
   } else {
     whyFlagged = `ASTRA identified this target as presenting a clear reference baseline for ${morph} morphology within the survey dataset.`;

@@ -11,6 +11,7 @@ import {
   Cpu,
   Activity
 } from 'lucide-react';
+import { CosmicBackground } from '../components/CosmicBackground';
 
 const LIBRARY_OBSERVATIONS = libraryData as Observation[];
 
@@ -132,7 +133,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onViewObser
   };
 
   return (
-    <div className="min-h-screen bg-[#030508] text-[#F2F4F7] flex flex-col relative overflow-x-hidden font-sans-ui selection:bg-[#C7CDD5]/30">
+    <div className="min-h-screen bg-[#050811] text-[#E9EEF4] flex flex-col relative overflow-x-hidden font-sans-ui selection:bg-[#8FD3FF]/30">
+      <CosmicBackground variant="landing" />
       
       {/* ========================================================= */}
       {/* 1. CINEMATIC FULL VIEWPORT ATMOSPHERIC BACKGROUND SYSTEM  */}

@@ -1,4 +1,4 @@
-import type { HealthResponse, TriageResponse, ApiErrorResponse, SpaceAIRequest, SpaceAIResponse } from '../types/api';
+import type { HealthResponse, TriageResponse, ApiErrorResponse, SpaceAIRequest, SpaceAIResponse, EvidenceResponse } from '../types/api';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
@@ -53,12 +53,32 @@ export async function getHealth(externalSignal?: AbortSignal): Promise<HealthRes
 /**
  * Upload image for real scientific triage analysis.
  */
-export async function triageImage(file: File, externalSignal?: AbortSignal): Promise<TriageResponse> {
+export async function triageImage(
+  file: File,
+  externalSignal?: AbortSignal,
+  userSelectedStudyType?: string,
+  ra?: number,
+  dec?: number,
+  observationId?: string
+): Promise<TriageResponse> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
   const formData = new FormData();
   formData.append('file', file, file.name);
+  if (userSelectedStudyType) {
+    formData.append('user_selected_study_type', userSelectedStudyType);
+  }
+  if (ra !== undefined && ra !== null) {
+    formData.append('ra', ra.toString());
+  }
+  if (dec !== undefined && dec !== null) {
+    formData.append('dec', dec.toString());
+  }
+  if (observationId) {
+    formData.append('observation_id', observationId);
+  }
+
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/triage`, {
@@ -165,4 +185,87 @@ export async function askSpaceAI(
  * Alias for askSpaceAI for AskAstra modal backward compatibility.
  */
 export const askAstraAI = askSpaceAI;
+
+/**
+ * Fetch multi-modal catalog evidence fusion result for observation.
+ */
+export async function getObservationEvidence(
+  observationId: string,
+  externalSignal?: AbortSignal
+): Promise<EvidenceResponse> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/observations/${encodeURIComponent(observationId)}/evidence`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      signal: externalSignal || controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new ApiError(`Evidence fetch failed with status ${response.status}`, 'evidence_error', response.status);
+    }
+
+    const data: EvidenceResponse = await response.json();
+    return data;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err instanceof ApiError) throw err;
+    return {
+      observation_id: observationId,
+      evidence_status: 'UNAVAILABLE',
+      catalog_sources_queried: ["Gaia DR3", "SDSS DR16", "ALLWISE", "TESS", "NASA Exoplanet Archive", "SIMBAD"],
+      contributing_catalogs: [],
+      explanation: 'Catalog evidence service is currently offline.',
+      provenance: [],
+      conflicts: [],
+    };
+  }
+}
+
+/**
+ * Trigger background catalog evidence enrichment for an observation.
+ */
+export async function triggerObservationEnrichment(
+  observationId: string,
+  ra?: number,
+  dec?: number
+): Promise<EvidenceResponse> {
+  const formData = new FormData();
+  if (ra !== undefined && ra !== null) formData.append('ra', ra.toString());
+  if (dec !== undefined && dec !== null) formData.append('dec', dec.toString());
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/observations/${encodeURIComponent(observationId)}/enrich`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`Enrichment trigger failed (${response.status})`, 'enrichment_error', response.status);
+    }
+
+    return await response.json();
+  } catch (err: any) {
+    if (err instanceof ApiError) throw err;
+    return {
+      observation_id: observationId,
+      evidence_status: 'UNAVAILABLE',
+      catalog_sources_queried: ["Gaia DR3", "SDSS DR16", "ALLWISE", "TESS", "NASA Exoplanet Archive", "SIMBAD"],
+      contributing_catalogs: [],
+      explanation: 'Enrichment service unavailable.',
+      provenance: [],
+      conflicts: [],
+    };
+  }
+}
+
 

@@ -193,7 +193,9 @@ export const AskAstraModal: React.FC<AskAstraModalProps> = ({
               <div className="flex items-center gap-2">
                 <span className="font-bold text-white">{observation.id}</span>
                 <span className="text-[10px] text-[#D5DAE0]">{observation.broad_morphology}</span>
-                <span className="text-[10px] text-[#5FC7A1]">{(observation.confidence * 100).toFixed(0)}% Conf</span>
+                <span className="text-[10px] text-[#5FC7A1]">
+                  {observation.confidence != null ? `${(observation.confidence * 100).toFixed(0)}% Conf` : 'Conf: N/A'}
+                </span>
               </div>
               <div className="text-[10px] text-[#717985]">
                 RA {observation.ra.toFixed(2)}°, DEC {observation.dec.toFixed(2)}° &bull; {observation.provenance || 'GZ2 / SDSS DR7'}

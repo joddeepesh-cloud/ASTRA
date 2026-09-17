@@ -76,9 +76,10 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
       }
 
       // Confidence Filter
-      if (confidenceFilter === 'HIGH' && obs.confidence < 0.90) return false;
-      if (confidenceFilter === 'MED' && (obs.confidence < 0.80 || obs.confidence >= 0.90)) return false;
-      if (confidenceFilter === 'LOW' && obs.confidence >= 0.80) return false;
+      const conf = obs.confidence ?? 0;
+      if (confidenceFilter === 'HIGH' && conf < 0.90) return false;
+      if (confidenceFilter === 'MED' && (conf < 0.80 || conf >= 0.90)) return false;
+      if (confidenceFilter === 'LOW' && conf >= 0.80) return false;
 
       return true;
     });
@@ -92,7 +93,7 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
         return (pOrder[b.priority] || 0) - (pOrder[a.priority] || 0);
       }
       if (sortBy === 'anomaly') return b.anomaly_score - a.anomaly_score;
-      if (sortBy === 'confidence') return b.confidence - a.confidence;
+      if (sortBy === 'confidence') return (b.confidence ?? 0) - (a.confidence ?? 0);
       return 0;
     });
   }, [searchQuery, morphologyFilter, priorityFilter, confidenceFilter, anomalyFilter, sortBy]);
@@ -114,7 +115,7 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
   };
 
   return (
-    <div className="p-6 md:p-10 space-y-6 max-w-7xl mx-auto font-sans-ui text-[#F2F4F7] selection:bg-[#C7CDD5]/30">
+    <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto font-sans-ui text-[#F2F4F7] selection:bg-[#C7CDD5]/30">
       
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#252D37] pb-4">
@@ -328,7 +329,9 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
                     </span>
                   </div>
                   <span className="text-[10px] text-[#5FC7A1] bg-[#0E241B] px-1.5 py-0.5 rounded border border-[#5FC7A1]/30">
-                    {(obs.confidence * 100).toFixed(0)}% CONF
+                    {obs.confidence != null && (obs.object_type === 'Galaxy' || obs.object_type === 'GALAXY')
+                      ? `${(obs.confidence * 100).toFixed(0)}% CONF`
+                      : 'N/A CONF'}
                   </span>
                 </div>
               </div>
@@ -409,7 +412,11 @@ export const ObservationLibraryPage: React.FC<ObservationLibraryPageProps> = ({ 
                 <div className="flex items-center gap-3">
                   <div className="text-right text-xs hidden lg:block">
                     <span className="text-[#717985] block text-[10px]">CONFIDENCE</span>
-                    <span className="text-[#5FC7A1] font-semibold">{(obs.confidence * 100).toFixed(1)}%</span>
+                    <span className="text-[#5FC7A1] font-semibold">
+                      {obs.confidence != null && (obs.object_type === 'Galaxy' || obs.object_type === 'GALAXY')
+                        ? `${(obs.confidence * 100).toFixed(1)}%`
+                        : 'N/A'}
+                    </span>
                   </div>
 
                   <button

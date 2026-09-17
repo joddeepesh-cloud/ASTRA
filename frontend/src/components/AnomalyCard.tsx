@@ -67,7 +67,11 @@ export const AnomalyCard: React.FC<AnomalyCardProps> = ({ observation, onInvesti
             </div>
             <div>
               <span className="text-[#717985] block">CONFIDENCE</span>
-              <span className="text-[#5FC7A1] font-semibold">{(observation.confidence * 100).toFixed(1)}%</span>
+              <span className="text-[#5FC7A1] font-semibold">
+                {observation.confidence != null && (observation.object_type === 'Galaxy' || observation.object_type === 'GALAXY')
+                  ? `${(observation.confidence * 100).toFixed(1)}%`
+                  : 'N/A'}
+              </span>
             </div>
             <div>
               <span className="text-[#717985] block">CATALOG MATCH</span>

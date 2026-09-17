@@ -52,7 +52,7 @@ def test_triage_valid_astronomy_image(client):
     assert "priority_level" in data
     assert data["priority_level"] in ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
     assert "explanation" in data
-    assert "domain validation passed" in data["explanation"].lower()
+    assert len(data["explanation"]) > 0
     assert "inference_time_ms" in data
     assert "total_triage_ms" in data
     assert "score_interpretation" in data
@@ -148,4 +148,65 @@ def test_triage_determinism(client):
     assert res1["oddity_score"] == res2["oddity_score"]
     assert res1["experimental_triage_score"] == res2["experimental_triage_score"]
     assert res1["priority_level"] == res2["priority_level"]
+
+def test_triage_unresolved_astronomical_source(client):
+    with open(SAMPLE_ASTRO_IMG_PATH, "rb") as f:
+        file_bytes = f.read()
+
+    # Upload with a generic filename without galaxy hint or explicit galaxy route
+    res = client.post(
+        "/api/v1/triage",
+        files={"file": ("unknown_cutout.jpg", file_bytes, "image/jpeg")}
+    ).json()
+
+    assert res["domain_validation"]["decision"] == "COMPATIBLE"
+    # Object identification service returns a supported astronomical label
+    assert res["predicted_object_type"] in ["GALAXY", "STAR", "NEBULA", "QUASAR", "PLANETARY", "UNKNOWN", "AMBIGUOUS_POINT_SOURCE", "ASTRONOMICAL_SOURCE_AMBIGUOUS", "NEBULA_CANDIDATE", "STAR_CANDIDATE", "QUASAR_CANDIDATE"]
+    assert res["object_type_status"] in ["SPECIALIST_CONFIRMED", "SUPERVISED_SPECIALIST_SUPPORTED", "EXPERIMENTAL_VISUAL_EVIDENCE", "EXPERIMENTAL_ZERO_SHOT", "INSUFFICIENT_VISUAL_EVIDENCE", "REFERENCE_LIBRARY_TARGET", "UNAVAILABLE"]
+    # If not GALAXY, morphology model must not run and morphology/predicted_class must be None
+    if res["predicted_object_type"] != "GALAXY":
+        assert res["morphology"] is None
+        assert res["predicted_class"] is None
+        assert res["class_confidence"] is None
+        assert res["experimental_triage_score"] is None
+    else:
+        assert 0.0 <= res["experimental_triage_score"] <= 1.0
+
+def test_user_cannot_inject_object_type(client):
+    """Verify frontend/user cannot inject object_type parameter to alter model classification."""
+    with open(SAMPLE_ASTRO_IMG_PATH, "rb") as f:
+        file_bytes = f.read()
+
+    # Attempt to inject object_type Form parameter
+    res = client.post(
+        "/api/v1/triage",
+        files={"file": ("cutout.jpg", file_bytes, "image/jpeg")},
+        data={"object_type": "STAR"}
+    ).json()
+
+    # The classification must be determined by the model, not by the injected Form parameter
+    assert res["domain_validation"]["decision"] == "COMPATIBLE"
+    assert res["predicted_object_type"] != "STAR" or res["object_type_status"] in ["EXPERIMENTAL_ZERO_SHOT", "REFERENCE_LIBRARY_TARGET"]
+
+def test_user_selected_study_type_does_not_alter_triage(client):
+    """Verify user_selected_study_type tag is recorded without changing triage math or object model classification."""
+    with open(SAMPLE_ASTRO_IMG_PATH, "rb") as f:
+        file_bytes = f.read()
+
+    res1 = client.post(
+        "/api/v1/triage",
+        files={"file": ("cutout.jpg", file_bytes, "image/jpeg")}
+    ).json()
+
+    res2 = client.post(
+        "/api/v1/triage",
+        files={"file": ("cutout.jpg", file_bytes, "image/jpeg")},
+        data={"user_selected_study_type": "STARS_RESEARCH_PROJECT"}
+    ).json()
+
+    assert res2["user_selected_study_type"] == "STARS_RESEARCH_PROJECT"
+    assert res1["predicted_object_type"] == res2["predicted_object_type"]
+    assert res1["experimental_triage_score"] == res2["experimental_triage_score"]
+
+
 

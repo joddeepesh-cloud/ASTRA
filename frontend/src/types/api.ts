@@ -46,8 +46,41 @@ export interface ScientificAttributes {
   [key: string]: number;
 }
 
+export interface ObjectTypeInfo {
+  label: 'GALAXY' | 'STAR' | 'QUASAR' | 'NEBULA' | 'PLANETARY' | 'AMBIGUOUS_POINT_SOURCE' | 'ASTRONOMICAL_SOURCE_AMBIGUOUS' | 'UNKNOWN' | 'INCOMPATIBLE' | string;
+  confidence: number | null;
+  status: 'EXPERIMENTAL_ZERO_SHOT' | 'REFERENCE_LIBRARY_TARGET' | 'UNAVAILABLE' | string;
+  predicted_object_type?: string | null;
+  visual_similarity_score?: number | null;
+  object_margin?: number | null;
+  object_confidence?: number | null;
+  object_type_confidence?: number | null;
+  object_type_status?: string | null;
+  top_class?: string | null;
+  top_score?: number | null;
+  second_best_class?: string | null;
+  margin_between_top_and_second?: number | null;
+}
+
+export interface MorphologyInfo {
+  label: 'SMOOTH' | 'EDGE_ON' | 'FEATURED_DISK' | 'SPIRAL' | string | null;
+  confidence: number | null;
+  status: 'SUPPORTED' | 'NOT_APPLICABLE' | 'UNAVAILABLE' | string;
+}
+
 export interface TriageResponse {
   domain_validation: DomainValidation;
+  object_type_info?: ObjectTypeInfo | null;
+  morphology_info?: MorphologyInfo | null;
+  predicted_object_type?: string | null;
+  visual_similarity_score?: number | null;
+  object_margin?: number | null;
+  object_confidence?: number | null;
+  object_type_confidence?: number | null;
+  object_type_status?: string | null;
+  user_selected_study_type?: string | null;
+  object_type?: 'GALAXY' | 'STAR' | 'QUASAR' | 'NEBULA' | 'PLANETARY' | 'AMBIGUOUS_POINT_SOURCE' | 'ASTRONOMICAL_SOURCE_AMBIGUOUS' | 'UNKNOWN' | 'INCOMPATIBLE' | string | null;
+  morphology?: string | null;
   predicted_class?: 'SMOOTH' | 'EDGE_ON' | 'FEATURED_DISK' | 'SPIRAL' | null;
   class_confidence?: number | null;
   class_probabilities?: ClassProbabilities | null;
@@ -66,7 +99,30 @@ export interface TriageResponse {
   inference_time_ms: number;
   total_triage_ms: number;
   score_interpretation: string;
+  observation_id?: string | null;
+  evidence_status?: 'PENDING' | 'COMPLETE' | 'UNAVAILABLE' | 'ERROR' | string | null;
+  ra?: number | null;
+  dec?: number | null;
+  fused_evidence?: Record<string, any> | null;
 }
+
+export interface EvidenceResponse {
+  observation_id: string;
+  evidence_status: 'PENDING' | 'COMPLETE' | 'UNAVAILABLE' | 'ERROR' | string;
+  ra?: number | null;
+  dec?: number | null;
+  fused_object_type?: string | null;
+  evidence_level?: string | null;
+  match_quality?: string | null;
+  catalog_sources_queried: string[];
+  contributing_catalogs: string[];
+  explanation: string;
+  provenance: string[];
+  conflicts: string[];
+  fused_result?: Record<string, any> | null;
+  updated_at?: string | null;
+}
+
 
 export interface ApiErrorResponse {
   error: string;

@@ -2,26 +2,37 @@
 
 @layer base {
   :root {
-    --bg-space-black: #030508;
-    --bg-deep-space: #070B11;
-    --bg-graphite: #0D1219;
-    --bg-charcoal: #151B23;
-    --bg-gunmetal: #252D37;
-    --border-steel: #4B5563;
-    --text-dark-silver: #717985;
-    --text-silver: #A8B0BA;
-    --text-platinum: #D5DAE0;
-    --text-moonlight: #F2F4F7;
-    --accent-lunar-silver: #C7CDD5;
-    --accent-ice-blue: #8FAFC2;
-    --accent-stellar-blue: #66869A;
-    --accent-amber: #D6A84F;
-    --accent-green: #5FC7A1;
+    /* Deep Purple Galaxy + Black Space Palette */
+    --space-black: #03040A;
+    --space-deep: #070912;
+    --space-purple: #0D0A1C;
+    --space-violet: #15102A;
+    --space-nebula: #21133B;
+    --space-indigo: #181536;
+
+    /* Galaxy & Observatory Accents */
+    --galaxy-purple: #7657B8;
+    --soft-violet: #9B7FD4;
+    --nebula-blue: #526AA8;
+    --ice-blue: #8FD3FF;
+    --muted-cyan: #55C7D9;
+    --amber: #D6A84F;
+    --accent-teal: #58BFA7;
+
+    /* Typography Hierarchy */
+    --platinum: #D8D3E2;
+    --soft-white: #ECEAF2;
+    --muted-text: #8E8A9D;
+    
+    /* System Aliases */
+    --bg-space-black: #03040A;
+    --bg-deep-space: #070912;
+    --text-moonlight: #ECEAF2;
   }
 
   body {
-    background-color: var(--bg-space-black);
-    color: var(--text-moonlight);
+    background-color: var(--space-black);
+    color: var(--soft-white);
     font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow-x: hidden;
   }
@@ -40,17 +51,29 @@
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
-/* Space-Agency Titanium & Observatory UI Panels */
+/* Deep Purple Galaxy Glass & Panel Hierarchy */
 .glass-panel {
   background: linear-gradient(
     135deg,
-    rgba(21, 27, 35, 0.85),
-    rgba(13, 18, 25, 0.90)
+    rgba(21, 16, 42, 0.88),
+    rgba(13, 10, 28, 0.92)
   );
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(199, 205, 213, 0.18);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.65), 0 0 24px rgba(210, 220, 230, 0.04);
+  border: 1px solid rgba(155, 127, 212, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(3, 4, 10, 0.80), 0 0 24px rgba(118, 87, 184, 0.05);
+}
+
+.glass-panel-elevated {
+  background: linear-gradient(
+    135deg,
+    rgba(33, 19, 59, 0.92),
+    rgba(21, 16, 42, 0.95)
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(155, 127, 212, 0.28);
+  box-shadow: 0 12px 40px 0 rgba(3, 4, 10, 0.85), 0 0 32px rgba(155, 127, 212, 0.08);
 }
 
 .glass-panel-hover {
@@ -58,15 +81,15 @@
 }
 
 .glass-panel-hover:hover {
-  border-color: rgba(213, 218, 224, 0.45);
-  box-shadow: 0 0 25px rgba(213, 218, 224, 0.12);
+  border-color: rgba(155, 127, 212, 0.45);
+  box-shadow: 0 0 25px rgba(155, 127, 212, 0.15);
   transform: translateY(-1px);
 }
 
 .star-grid {
   background-image: 
-    radial-gradient(rgba(199, 205, 213, 0.12) 1px, transparent 0),
-    radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
+    radial-gradient(rgba(155, 127, 212, 0.15) 1px, transparent 0),
+    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0);
   background-position: 0 0, 25px 25px;
   background-size: 50px 50px;
 }
@@ -74,12 +97,12 @@
 /* Atmospheric Vignette & Grid Scanline Overlay */
 .scanline-overlay {
   background: linear-gradient(
-    rgba(7, 11, 17, 0) 50%, 
-    rgba(3, 5, 8, 0.35) 50%
+    rgba(13, 10, 28, 0) 50%, 
+    rgba(3, 4, 10, 0.35) 50%
   ), linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.01),
-    rgba(143, 175, 194, 0.01),
+    rgba(155, 127, 212, 0.01),
     rgba(0, 0, 0, 0.02)
   );
   background-size: 100% 4px, 6px 100%;
@@ -141,8 +164,8 @@
 /* Stagger Animation Delays */
 .delay-100 { animation-delay: 0.1s; }
 .delay-200 { animation-delay: 0.2s; }
-.delay-[#8FAFC2]` { animation-delay: 0.3s; }
-.delay-[#C7CDD5]` { animation-delay: 0.4s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
 .delay-500 { animation-delay: 0.5s; }
 
 /* Reduced Motion Override */
@@ -164,12 +187,12 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #030508;
+  background: #03040A;
 }
 ::-webkit-scrollbar-thumb {
-  background: #252D37;
+  background: #21133B;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C7CDD5;
+  background: #9B7FD4;
 }

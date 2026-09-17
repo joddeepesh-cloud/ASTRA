@@ -86,16 +86,16 @@ export const MissionBriefingPage: React.FC<MissionBriefingPageProps> = ({ onNavi
   ];
 
   return (
-    <div className="p-6 md:p-12 space-y-12 max-w-7xl mx-auto font-sans-ui text-[#F2F4F7] selection:bg-[#C7CDD5]/30">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 max-w-6xl mx-auto font-sans-ui text-[#F2F4F7] selection:bg-[#C7CDD5]/30">
       
       {/* ========================================================= */}
       {/* 1. OBSERVATORY HUD HERO HEADER                             */}
       {/* ========================================================= */}
-      <div className="relative glass-panel p-8 md:p-12 rounded-2xl border border-[#C7CDD5]/30 bg-gradient-to-r from-[#030508] via-[#0D1219] to-[#030508] shadow-2xl overflow-hidden space-y-6">
+      <div className="relative glass-panel p-6 md:p-8 rounded-2xl border border-[#C7CDD5]/30 bg-gradient-to-r from-[#030508] via-[#0D1219] to-[#030508] shadow-2xl overflow-hidden space-y-4">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#C7CDD5] to-transparent opacity-80" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#8FAFC2]/05 blur-3xl rounded-full pointer-events-none" />
 
-        <div className="flex items-center justify-between border-b border-[#252D37] pb-4 font-mono-tech text-xs">
+        <div className="flex items-center justify-between border-b border-[#252D37] pb-3 font-mono-tech text-xs">
           <div className="flex items-center gap-3">
             <span className="px-3 py-1 rounded bg-[#151B23] border border-[#C7CDD5]/30 text-[#D5DAE0] font-bold tracking-widest uppercase flex items-center gap-1.5">
               <Compass className="w-3.5 h-3.5" /> MISSION BRIEFING
@@ -108,24 +108,24 @@ export const MissionBriefingPage: React.FC<MissionBriefingPageProps> = ({ onNavi
           </span>
         </div>
 
-        <div className="space-y-4 max-w-3xl">
-          <h1 className="text-4xl md:text-6xl font-serif-display font-bold text-[#F2F4F7] tracking-tight leading-tight uppercase">
+        <div className="space-y-3 max-w-3xl">
+          <h1 className="text-3xl md:text-5xl font-serif-display font-bold text-[#F2F4F7] tracking-tight leading-tight uppercase">
             Your Window Into Astronomical Observations
           </h1>
 
-          <p className="text-lg md:text-xl font-serif-display text-[#D5DAE0]">
+          <p className="text-base md:text-lg font-serif-display text-[#D5DAE0]">
             "Find what deserves humanity's attention."
           </p>
 
-          <p className="text-sm md:text-base text-[#A8B0BA] font-sans-ui leading-relaxed max-w-2xl">
+          <p className="text-xs md:text-sm text-[#A8B0BA] font-sans-ui leading-relaxed max-w-2xl">
             ASTRA analyzes astronomical observations downlinked from survey streams, identifies statistically unusual patterns, and prioritizes observations for scientific review under tight downlink limits.
           </p>
         </div>
 
-        <div className="pt-2 flex flex-wrap items-center gap-4">
+        <div className="pt-1 flex flex-wrap items-center gap-3">
           <button
             onClick={() => onNavigateTab('research')}
-            className="px-6 py-3.5 rounded-lg bg-[#D5DAE0] hover:bg-white text-[#070B11] font-mono-tech text-xs font-bold tracking-widest transition-all shadow-xl shadow-black/40 flex items-center gap-2 cursor-pointer"
+            className="px-5 py-3 rounded-lg bg-[#D5DAE0] hover:bg-white text-[#070B11] font-mono-tech text-xs font-bold tracking-widest transition-all shadow-xl shadow-black/40 flex items-center gap-2 cursor-pointer"
           >
             <Rocket className="w-4 h-4 text-[#070B11]" />
             START RESEARCH MODE
@@ -133,7 +133,7 @@ export const MissionBriefingPage: React.FC<MissionBriefingPageProps> = ({ onNavi
 
           <button
             onClick={() => onNavigateTab('library')}
-            className="px-6 py-3.5 rounded-lg glass-panel hover:bg-[#151B23] text-[#F2F4F7] font-mono-tech text-xs font-semibold tracking-widest border border-[#C7CDD5]/30 transition-all flex items-center gap-2 cursor-pointer"
+            className="px-5 py-3 rounded-lg glass-panel hover:bg-[#151B23] text-[#F2F4F7] font-mono-tech text-xs font-semibold tracking-widest border border-[#C7CDD5]/30 transition-all flex items-center gap-2 cursor-pointer"
           >
             EXPLORE ARCHIVE <Telescope className="w-4 h-4 text-[#8FAFC2]" />
           </button>
@@ -143,8 +143,8 @@ export const MissionBriefingPage: React.FC<MissionBriefingPageProps> = ({ onNavi
       {/* ========================================================= */}
       {/* 2. TODAY'S SPACE FACT (EDITORIAL PANEL)                   */}
       {/* ========================================================= */}
-      <div className="glass-panel p-6 md:p-8 rounded-2xl border border-[#D6A84F]/30 bg-gradient-to-r from-[#030508] via-[#3A2B15]/20 to-[#030508] shadow-xl space-y-4 relative">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D6A84F]/20 pb-4">
+      <div className="glass-panel p-5 md:p-6 rounded-2xl border border-[#D6A84F]/30 bg-gradient-to-r from-[#030508] via-[#3A2B15]/20 to-[#030508] shadow-xl space-y-3 relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D6A84F]/20 pb-3">
           <div className="flex items-center gap-2.5">
             <Sparkles className="w-4 h-4 text-[#D6A84F]" />
             <span className="text-xs font-mono-tech font-bold text-[#D6A84F] uppercase tracking-widest">
@@ -174,46 +174,46 @@ export const MissionBriefingPage: React.FC<MissionBriefingPageProps> = ({ onNavi
       {/* ========================================================= */}
       {/* 3. EDITORIAL EXPLORATION LAUNCHPAD SEQUENCE               */}
       {/* ========================================================= */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-[#252D37] pb-4 font-mono-tech">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-[#252D37] pb-3 font-mono-tech">
           <div>
-            <h2 className="text-xl font-serif-display font-bold text-[#F2F4F7] tracking-wider uppercase">
+            <h2 className="text-lg font-serif-display font-bold text-[#F2F4F7] tracking-wider uppercase">
               What You Can Explore
             </h2>
-            <p className="text-xs text-[#A8B0BA] font-sans-ui mt-1">
+            <p className="text-xs text-[#A8B0BA] font-sans-ui mt-0.5">
               Select an ASTRA module below to begin your mission session.
             </p>
           </div>
           <span className="text-xs text-[#717985]">05 MODULES ACTIVE</span>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {modules.map((mod) => {
             const Icon = mod.icon;
             return (
               <div
                 key={mod.num}
                 onClick={() => onNavigateTab(mod.tab)}
-                className={`glass-panel p-6 md:p-8 rounded-xl border transition-all duration-300 cursor-pointer group flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-2xl ${mod.accent}`}
+                className={`glass-panel p-5 md:p-6 rounded-xl border transition-all duration-300 cursor-pointer group flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-2xl ${mod.accent}`}
               >
-                <div className="flex items-start md:items-center gap-6">
-                  <span className="text-3xl md:text-4xl font-mono-tech font-bold text-[#717985] group-hover:text-current transition-colors">
+                <div className="flex items-start md:items-center gap-5">
+                  <span className="text-2xl md:text-3xl font-mono-tech font-bold text-[#717985] group-hover:text-current transition-colors">
                     {mod.num}
                   </span>
-                  <div className="w-12 h-12 rounded-lg bg-[#030508] border border-[#252D37] flex items-center justify-center text-[#A8B0BA] group-hover:border-current group-hover:text-[#F2F4F7] transition-all shrink-0">
-                    <Icon className="w-6 h-6" />
+                  <div className="w-10 h-10 rounded-lg bg-[#030508] border border-[#252D37] flex items-center justify-center text-[#A8B0BA] group-hover:border-current group-hover:text-[#F2F4F7] transition-all shrink-0">
+                    <Icon className="w-5 h-5" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                      <h3 className="text-lg md:text-xl font-serif-display font-semibold text-[#F2F4F7] group-hover:text-current transition-colors">
+                      <h3 className="text-base md:text-lg font-serif-display font-semibold text-[#F2F4F7] group-hover:text-current transition-colors">
                         {mod.title}
                       </h3>
-                      <span className="text-[10px] font-mono-tech px-2.5 py-0.5 rounded bg-[#030508] border border-[#252D37] text-[#A8B0BA]">
+                      <span className="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-[#030508] border border-[#252D37] text-[#A8B0BA]">
                         {mod.badge}
                       </span>
                     </div>
                     <p className="text-xs font-mono-tech text-[#717985]">{mod.subtitle}</p>
-                    <p className="text-xs md:text-sm text-[#A8B0BA] font-sans-ui max-w-2xl pt-1 leading-relaxed">
+                    <p className="text-xs text-[#A8B0BA] font-sans-ui max-w-2xl pt-0.5 leading-relaxed">
                       {mod.description}
                     </p>
                   </div>
@@ -232,30 +232,30 @@ export const MissionBriefingPage: React.FC<MissionBriefingPageProps> = ({ onNavi
       {/* ========================================================= */}
       {/* 4. READY TO EXPLORE CTA                                    */}
       {/* ========================================================= */}
-      <div className="glass-panel p-10 md:p-14 rounded-2xl border border-[#C7CDD5]/30 bg-gradient-to-b from-[#0D1219] via-[#070B11] to-[#030508] text-center space-y-6 relative overflow-hidden">
-        <div className="space-y-3 max-w-2xl mx-auto">
+      <div className="glass-panel p-8 md:p-10 rounded-2xl border border-[#C7CDD5]/30 bg-gradient-to-b from-[#0D1219] via-[#070B11] to-[#030508] text-center space-y-4 relative overflow-hidden">
+        <div className="space-y-2 max-w-2xl mx-auto">
           <span className="font-mono-tech text-xs text-[#8FAFC2] tracking-widest uppercase block">
             READY TO EXPLORE?
           </span>
-          <h2 className="text-3xl md:text-5xl font-serif-display font-bold text-[#F2F4F7] tracking-tight uppercase">
+          <h2 className="text-2xl md:text-4xl font-serif-display font-bold text-[#F2F4F7] tracking-tight uppercase">
             Begin Observation Analysis
           </h2>
-          <p className="text-sm text-[#A8B0BA] font-sans-ui leading-relaxed">
+          <p className="text-xs md:text-sm text-[#A8B0BA] font-sans-ui leading-relaxed">
             Start by uploading an astronomical observation or explore prioritized anomalies in the scientific archive.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
           <button
             onClick={() => onNavigateTab('research')}
-            className="px-8 py-4 rounded-lg bg-[#D5DAE0] hover:bg-white text-[#070B11] font-mono-tech text-xs font-bold tracking-widest transition-all shadow-xl shadow-black/40 flex items-center gap-3 cursor-pointer"
+            className="px-6 py-3 rounded-lg bg-[#D5DAE0] hover:bg-white text-[#070B11] font-mono-tech text-xs font-bold tracking-widest transition-all shadow-xl shadow-black/40 flex items-center gap-2 cursor-pointer"
           >
             START RESEARCH <ArrowRight className="w-4 h-4 text-[#070B11]" />
           </button>
 
           <button
             onClick={() => onNavigateTab('library')}
-            className="px-8 py-4 rounded-lg glass-panel hover:bg-[#151B23] text-[#F2F4F7] font-mono-tech text-xs font-semibold tracking-widest border border-[#C7CDD5]/30 hover:border-[#D5DAE0] transition-all flex items-center gap-3 cursor-pointer"
+            className="px-6 py-3 rounded-lg glass-panel hover:bg-[#151B23] text-[#F2F4F7] font-mono-tech text-xs font-semibold tracking-widest border border-[#C7CDD5]/30 hover:border-[#D5DAE0] transition-all flex items-center gap-2 cursor-pointer"
           >
             EXPLORE LIBRARY <Telescope className="w-4 h-4 text-[#8FAFC2]" />
           </button>

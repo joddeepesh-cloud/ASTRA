@@ -1,10 +1,10 @@
 import type { TriageResponse } from './api';
 
 export type BroadMorphology = 'SMOOTH' | 'EDGE_ON' | 'FEATURED_DISK' | 'SPIRAL' | 'DISK_FEATURE' | 'OTHER';
-export type ObjectType = 'Galaxy' | 'Star' | 'Quasar' | 'Unknown';
+export type ObjectType = 'Galaxy' | 'GALAXY' | 'Star' | 'Quasar' | 'Unresolved astronomical source' | 'Astronomical object — type unresolved' | 'Unknown';
 export type PriorityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type CatalogMatchStatus = 'MATCHED' | 'WEAK_MATCH' | 'NO_MATCH' | 'UNCHECKED';
-export type ActiveTab = 'landing' | 'briefing' | 'observations' | 'anomalies' | 'library' | 'detail' | 'research' | 'copilot' | 'history';
+export type ActiveTab = 'landing' | 'briefing' | 'observations' | 'anomalies' | 'library' | 'detail' | 'research' | 'copilot' | 'history' | 'settings';
 
 export interface AnalysisHistoryRecord {
   id: string; // e.g. "HIST-20260913-001"
@@ -13,8 +13,9 @@ export interface AnalysisHistoryRecord {
   observation_id: string;
   filename: string;
   domain_status: 'COMPATIBLE' | 'UNCERTAIN' | 'INCOMPATIBLE';
+  object_type?: string;
   morphology: string;
-  confidence: number; // 0.0 - 1.0
+  confidence: number | null; // 0.0 - 1.0 or null
   triage_score: number; // 0.0 - 1.0
   priority: PriorityLevel;
   status: 'COMPLETED' | 'FLAGGED_FOR_REVIEW' | 'REJECTED';
@@ -30,7 +31,7 @@ export interface Observation {
   gz2class: string;
   broad_morphology: BroadMorphology;
   object_type: ObjectType;
-  confidence: number; // 0.0 - 1.0
+  confidence: number | null; // 0.0 - 1.0 or null
   anomaly_score: number; // 0.0 - 1.0
   ood_score: number; // Out of distribution score
   priority: PriorityLevel;
@@ -49,7 +50,7 @@ export interface Observation {
   p_odd?: number;
   morphology_probs: {
     label: string;
-    probability: number;
+    probability: number | null;
   }[];
   is_demo?: boolean;
   is_live?: boolean;

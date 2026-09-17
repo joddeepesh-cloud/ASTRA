@@ -8,6 +8,7 @@ import type { TriageResponse, DomainValidationGate } from '../types/api';
 import type { Observation } from '../types';
 import { ConfidenceBar } from './ConfidenceBar';
 import { PriorityBadge } from './PriorityBadge';
+import { TriageExplanation } from './TriageExplanation';
 import { ObservationLibraryPicker } from './ObservationLibraryPicker';
 import { recordLiveAnalysis } from '../services/analysisHistory';
 
@@ -127,8 +128,8 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
 
       setState('analyzing');
 
-      // Submit to real ASTRA FastAPI /triage backend
-      const result = await triageImage(file, controller.signal);
+      // Submit to real ASTRA FastAPI /triage backend (Library targets are verified Galaxy Zoo observations)
+      const result = await triageImage(file, controller.signal, obs.object_type || 'GALAXY');
       setTriageResult(result);
       setState('success');
 
@@ -272,7 +273,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
                     {/* Left: Image Preview */}
                     <div className="md:col-span-5">
                       <div className="aspect-square w-full rounded-lg overflow-hidden bg-black border border-[#252D37] relative">
@@ -405,7 +406,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
               </div>
 
               {/* Result Main Display Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
                 {/* Left: Image & Morphology Classification */}
                 <div className="md:col-span-6 space-y-4">
                   {previewUrl && (
@@ -429,14 +430,14 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                     </div>
                   )}
 
-                  {triageResult.predicted_class && triageResult.class_confidence != null && triageResult.class_probabilities && (
-                    <div className="bg-[#0D1219]/80 p-4 rounded-lg border border-[#252D37] space-y-3">
+                  {triageResult.predicted_class && triageResult.class_confidence != null && triageResult.class_probabilities ? (
+                    <div className="bg-[#0D1219]/80 p-4 rounded-lg border border-[#252D37] space-y-3 font-mono-tech">
                       <div className="flex justify-between items-center font-mono-tech">
                         <span className="text-xs text-[#717985]">PREDICTED MORPHOLOGY</span>
                         <span className="text-sm font-bold text-[#F2F4F7] uppercase">{triageResult.predicted_class}</span>
                       </div>
                       <div className="flex justify-between items-center font-mono-tech text-xs">
-                        <span className="text-[#717985]">CLASSIFICATION CONFIDENCE</span>
+                        <span className="text-[#717985]">MORPHOLOGY CONFIDENCE</span>
                         <span className="text-[#5FC7A1] font-bold">{(triageResult.class_confidence * 100).toFixed(1)}%</span>
                       </div>
 
@@ -451,74 +452,68 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onInspectResult 
                         ))}
                       </div>
                     </div>
-                  )}
-                </div>
-
-                {/* Right: Scientific Triage Scores & Attributes */}
-                <div className="md:col-span-6 space-y-4">
-                  {/* Triage Score Summary Box */}
-                  {triageResult.experimental_triage_score != null && (
-                    <div className="bg-[#0D1219]/80 p-4 rounded-lg border border-[#C7CDD5]/30 space-y-3 font-mono-tech">
+                  ) : (
+                    <div className="bg-[#0D1219]/80 p-4 rounded-lg border border-[#252D37] space-y-3 font-mono-tech text-xs">
                       <div className="flex justify-between items-center border-b border-[#252D37] pb-2">
-                        <span className="text-xs text-[#717985] uppercase">EXPERIMENTAL TRIAGE SCORE</span>
-                        <span className="text-2xl font-bold text-[#F2F4F7]">{triageResult.experimental_triage_score.toFixed(2)}</span>
+                        <span className="text-[11px] text-[#D5DAE0] font-bold uppercase">OBJECT ROUTER EVIDENCE</span>
+                        <span className="text-[10px] text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded font-bold">
+                          {triageResult.object_type_status || 'EXPERIMENTAL_ZERO_SHOT'}
+                        </span>
                       </div>
 
-                      <div className="space-y-2.5 pt-1">
-                        {triageResult.novelty_score != null && (
-                          <div>
-                            <div className="flex justify-between text-xs mb-1">
-                              <span className="text-[#717985]">Novelty Score (Nearest Centroid)</span>
-                              <span className="text-[#D6A84F]">{triageResult.novelty_score.toFixed(2)}</span>
-                            </div>
-                            <div className="w-full bg-[#030508] rounded-full h-2 overflow-hidden border border-[#252D37]">
-                              <div className="bg-[#D6A84F] h-2 rounded-full" style={{ width: `${triageResult.novelty_score * 100}%` }} />
-                            </div>
-                          </div>
-                        )}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <div className="bg-[#070B11] p-2.5 rounded border border-[#252D37]">
+                          <span className="text-[10px] text-[#717985] block uppercase">Visual Similarity</span>
+                          <span className="text-cyan-300 font-bold text-sm">
+                            {triageResult.visual_similarity_score !== undefined && triageResult.visual_similarity_score !== null
+                              ? triageResult.visual_similarity_score.toFixed(2)
+                              : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="bg-[#070B11] p-2.5 rounded border border-[#252D37]">
+                          <span className="text-[10px] text-[#717985] block uppercase">Decision Margin</span>
+                          <span className="text-emerald-300 font-bold text-sm">
+                            {triageResult.object_margin !== undefined && triageResult.object_margin !== null
+                              ? `+${triageResult.object_margin.toFixed(2)}`
+                              : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
 
-                        {triageResult.uncertainty_score != null && (
-                          <div>
-                            <div className="flex justify-between text-xs mb-1">
-                              <span className="text-[#717985]">Classification Uncertainty</span>
-                              <span className="text-rose-400">{triageResult.uncertainty_score.toFixed(2)}</span>
-                            </div>
-                            <div className="w-full bg-[#030508] rounded-full h-2 overflow-hidden border border-[#252D37]">
-                              <div className="bg-rose-400 h-2 rounded-full" style={{ width: `${triageResult.uncertainty_score * 100}%` }} />
-                            </div>
-                          </div>
-                        )}
-
-                        {triageResult.oddity_score != null && (
-                          <div>
-                            <div className="flex justify-between text-xs mb-1">
-                              <span className="text-[#717985]">Scientific Oddity Attribute (p_odd)</span>
-                              <span className="text-[#8FAFC2]">{triageResult.oddity_score.toFixed(2)}</span>
-                            </div>
-                            <div className="w-full bg-[#030508] rounded-full h-2 overflow-hidden border border-[#252D37]">
-                              <div className="bg-[#8FAFC2] h-2 rounded-full" style={{ width: `${triageResult.oddity_score * 100}%` }} />
-                            </div>
-                          </div>
-                        )}
+                      <div className="p-3 bg-[#15232E]/60 rounded border border-[#8FAFC2]/30 text-[11px] text-[#A8B0BA] font-sans-ui leading-relaxed">
+                        Galaxy Zoo morphology specialist was not executed because this target was resolved as a non-galaxy observation ({triageResult.predicted_object_type || 'Unresolved point source'}).
                       </div>
                     </div>
                   )}
+                </div>
 
-                  {/* Deterministic Scientific Explanation */}
-                  <div className="bg-[#030508]/80 p-4 rounded-lg border border-[#252D37] space-y-2">
-                    <span className="text-xs font-mono-tech text-[#8FAFC2] font-bold block">DETERMINISTIC TRIAGE EXPLANATION</span>
-                    <p className="text-xs text-[#A8B0BA] font-sans-ui leading-relaxed">
-                      {triageResult.explanation}
-                    </p>
-                  </div>
-
-                  {/* Scientific Disclaimer */}
-                  <div className="p-3 bg-[#3A2B15]/30 rounded border border-[#D6A84F]/20 text-[11px] font-sans-ui text-[#D6A84F]/90 leading-relaxed">
-                    {triageResult.score_interpretation}
-                  </div>
+                {/* Right: Scientific ANOMALY Interpretation & Triage Explanation */}
+                <div className="md:col-span-6 space-y-4">
+                  <TriageExplanation
+                    signals={{
+                      score: triageResult.experimental_triage_score,
+                      priority: triageResult.priority_level,
+                      novelty_score: triageResult.novelty_score,
+                      uncertainty_score: triageResult.uncertainty_score,
+                      oddity_score: triageResult.oddity_score,
+                      raw_embedding_distance: triageResult.raw_embedding_distance,
+                      confidence: triageResult.class_confidence,
+                      p_odd: triageResult.scientific_attributes?.prob_odd,
+                      predicted_class: triageResult.predicted_class,
+                      nearest_reference_class: triageResult.nearest_reference_class,
+                      model_version: triageResult.model_version,
+                      domain_status: triageResult.domain_validation?.decision,
+                      domain_reason: triageResult.domain_validation?.semantic_reason,
+                      object_type_info: triageResult.object_type_info,
+                      morphology_info: triageResult.morphology_info,
+                      object_type: triageResult.object_type || selectedLibraryObs?.object_type,
+                      morphology: triageResult.morphology,
+                      scientific_attributes: triageResult.scientific_attributes
+                    }}
+                  />
 
                   {/* Action Buttons */}
-                  <div className="flex gap-3 pt-2">
+                  <div className="flex gap-3 pt-2 font-mono-tech">
                     <button
                       onClick={resetUpload}
                       className="flex-1 py-2.5 rounded bg-[#151B23] hover:bg-[#252D37] text-[#A8B0BA] font-mono-tech text-xs border border-[#252D37] transition-all cursor-pointer"

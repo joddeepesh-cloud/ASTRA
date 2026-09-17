@@ -44,7 +44,11 @@ export const ObservationCard: React.FC<ObservationCardProps> = ({ observation, o
           <div className="grid grid-cols-2 gap-2 text-xs font-mono-tech bg-[#0D1219]/70 p-2.5 rounded border border-[#252D37]">
             <div>
               <span className="text-[#717985] block text-[10px]">CONFIDENCE</span>
-              <span className="text-[#5FC7A1] font-semibold">{(observation.confidence * 100).toFixed(1)}%</span>
+              <span className="text-[#5FC7A1] font-semibold">
+                {observation.confidence != null && (observation.object_type === 'Galaxy' || observation.object_type === 'GALAXY')
+                  ? `${(observation.confidence * 100).toFixed(1)}%`
+                  : 'N/A'}
+              </span>
             </div>
             <div>
               <span className="text-[#717985] block text-[10px]">ANOMALY SCORE</span>

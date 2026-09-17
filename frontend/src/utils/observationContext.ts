@@ -7,7 +7,7 @@ export interface ObservationAIContext {
   image_url: string;
   broad_morphology: string;
   gz2class: string;
-  confidence: number;
+  confidence: number | null;
   confidence_pct: string;
   coordinates: {
     ra: number;
@@ -60,11 +60,11 @@ export function getWhyInteresting(obs: Observation): string {
   if (pOdd >= 0.30) {
     return `The observation exhibits an elevated Galaxy Zoo oddity signal (prob_odd = ${pOdd.toFixed(2)}), suggesting unusual visual structure worth closer inspection.`;
   }
-  if (conf < 0.65) {
+  if (conf != null && conf < 0.65) {
     return `ASTRA detects competing morphology probability signals, meaning the classification carries higher uncertainty and warrants detailed expert review.`;
   }
   if (obs.broad_morphology === 'SPIRAL' && (obs.p_spiral ?? 0) >= 0.80) {
-    return `The observation exhibits a prominent, high-confidence spiral morphology signal (${((obs.p_spiral ?? conf) * 100).toFixed(0)}%), providing clear structural detail.`;
+    return `The observation exhibits a prominent, high-confidence spiral morphology signal (${((obs.p_spiral ?? (conf ?? 0)) * 100).toFixed(0)}%), providing clear structural detail.`;
   }
   if (obs.broad_morphology === 'EDGE_ON' && (obs.p_edgeon ?? 0) >= 0.80) {
     return `The observation presents a strong edge-on disk profile, useful for analyzing vertical disk scale heights and attenuation structures.`;
@@ -79,10 +79,10 @@ export function getWhyInteresting(obs: Observation): string {
  * Transforms an Observation record into a clean, structured AI context payload.
  */
 export function createObservationAIContext(obs: Observation): ObservationAIContext {
-  const pSmooth = obs.p_smooth ?? (obs.broad_morphology === 'SMOOTH' ? obs.confidence : 0.1);
-  const pEdgeon = obs.p_edgeon ?? (obs.broad_morphology === 'EDGE_ON' ? obs.confidence : 0.1);
-  const pFeatures = obs.p_features ?? (obs.broad_morphology === 'FEATURED_DISK' ? obs.confidence : 0.1);
-  const pSpiral = obs.p_spiral ?? (obs.broad_morphology === 'SPIRAL' ? obs.confidence : 0.1);
+  const pSmooth = obs.p_smooth ?? (obs.broad_morphology === 'SMOOTH' ? (obs.confidence ?? 0.1) : 0.1);
+  const pEdgeon = obs.p_edgeon ?? (obs.broad_morphology === 'EDGE_ON' ? (obs.confidence ?? 0.1) : 0.1);
+  const pFeatures = obs.p_features ?? (obs.broad_morphology === 'FEATURED_DISK' ? (obs.confidence ?? 0.1) : 0.1);
+  const pSpiral = obs.p_spiral ?? (obs.broad_morphology === 'SPIRAL' ? (obs.confidence ?? 0.1) : 0.1);
   const pOdd = obs.p_odd ?? 0.0;
 
   return {
@@ -93,7 +93,7 @@ export function createObservationAIContext(obs: Observation): ObservationAIConte
     broad_morphology: obs.broad_morphology,
     gz2class: obs.gz2class,
     confidence: obs.confidence,
-    confidence_pct: `${(obs.confidence * 100).toFixed(1)}%`,
+    confidence_pct: obs.confidence != null ? `${(obs.confidence * 100).toFixed(1)}%` : 'N/A',
     coordinates: {
       ra: obs.ra,
       dec: obs.dec,
@@ -130,6 +130,7 @@ export function createObservationAIContext(obs: Observation): ObservationAIConte
  */
 export const buildAskAstraContextPayload = createObservationAIContext;
 
-function round4(val: number): number {
+function round4(val: number | null): number {
+  if (val == null) return 0;
   return Math.round(val * 10000) / 10000;
 }

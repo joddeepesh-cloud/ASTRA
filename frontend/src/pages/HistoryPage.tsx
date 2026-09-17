@@ -37,7 +37,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ onInspectObservation }
         dec: 0.0,
         gz2class: record.morphology,
         broad_morphology: record.morphology === 'SPIRAL' ? 'SPIRAL' : record.morphology === 'SMOOTH' ? 'SMOOTH' : 'DISK_FEATURE',
-        object_type: 'Galaxy',
+        object_type: (record.object_type === 'GALAXY' || record.object_type === 'Galaxy' || record.filename?.startsWith('LIB-')) ? 'Galaxy' : 'Unresolved astronomical source',
         confidence: record.confidence,
         anomaly_score: record.triage_score,
         ood_score: record.triage_score,
@@ -56,19 +56,19 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ onInspectObservation }
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto" data-tour="history-page">
+    <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto font-sans-ui text-[#ECEAF2]" data-tour="history-page">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#21133B] pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold font-mono text-white tracking-wider flex items-center gap-2.5">
-              <History className="w-6 h-6 text-[#8FAFC2]" /> ANALYSIS HISTORY
+            <h1 className="text-xl font-bold font-serif-display text-white tracking-wider uppercase flex items-center gap-2.5">
+              <History className="w-5 h-5 text-[#8FAFC2]" /> ANALYSIS HISTORY
             </h1>
-            <span className="text-xs font-mono bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 px-2 py-0.5 rounded">
+            <span className="text-xs font-mono-tech bg-[#15102A] text-[#9B7FD4] border border-[#9B7FD4]/40 px-2 py-0.5 rounded font-bold">
               SESSION LEDGER
             </span>
           </div>
-          <p className="text-xs text-slate-400 font-sans mt-1">
+          <p className="text-xs text-[#8E8A9D] font-sans-ui mt-1">
             Historical ledger of astronomical observation analysis runs, domain verification checks, and experimental triage scores.
           </p>
         </div>
@@ -170,7 +170,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ onInspectObservation }
                   <td className="p-3.5">
                     <span className="text-slate-200 font-semibold">{rec.morphology}</span>
                     <span className="text-[10px] text-slate-400 block font-mono">
-                      {(rec.confidence * 100).toFixed(1)}% conf
+                      {rec.confidence != null ? `${(rec.confidence * 100).toFixed(1)}% conf` : 'conf: N/A'}
                     </span>
                   </td>
                   <td className="p-3.5 text-center font-bold">

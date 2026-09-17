@@ -1,0 +1,813 @@
+{
+  "validation_timestamp": "2026-09-16 17:15:19 UTC",
+  "total_targets_evaluated": 9,
+  "results": [
+    {
+      "target_id": "GALAXY-ZOO-20027",
+      "ra": 181.34164,
+      "dec": 3.537008,
+      "category": "GALAXY",
+      "local_image_result": {
+        "predicted_object_type": "GALAXY",
+        "object_type_status": "EXPERIMENTAL_VISUAL_EVIDENCE",
+        "evidence_quality": "MODERATE",
+        "object_evidence_source": [
+          "Image structural analysis",
+          "OpenCLIP zero-shot"
+        ],
+        "visual_similarity_score": 0.3948,
+        "object_margin": 0.154,
+        "object_confidence": null,
+        "top_class": "STAR",
+        "top_score": 0.3948,
+        "second_best_class": "QUASAR",
+        "margin_between_top_and_second": 0.154,
+        "class_probabilities": {
+          "GALAXY": 0.0735,
+          "STAR": 0.3948,
+          "NEBULA": 0.0571,
+          "QUASAR": 0.2408,
+          "PLANETARY": 0.109,
+          "UNKNOWN": 0.1248
+        },
+        "point_source_metrics": {
+          "bg_level": 0.0235,
+          "bg_std": 0.0208,
+          "peak_intensity": 0.7686,
+          "peak_to_bg": 32.67,
+          "concentration_ratio": 0.0707,
+          "compactness": 0.0128,
+          "fwhm_proxy_px": 56.5,
+          "extent_px": 21137,
+          "extended_score": 0.8852,
+          "diffuse_emission_score": 0.7598,
+          "point_source_score": 0.2318,
+          "connected_region_area": 21137,
+          "connected_asymmetry": 0.0528,
+          "spatial_dispersion": 9919.39,
+          "is_point_source_like": false,
+          "is_diffuse_like": true,
+          "is_extended_like": true,
+          "evidence_strength": "DIFFUSE"
+        },
+        "evidence": [
+          "Extended astronomical light distribution (Extended score: 0.89, FWHM: 56.5px)",
+          "Central galactic core matched stellar/AGN prompt (0.39), but image structural analysis confirms extended galaxy profile"
+        ],
+        "latency_ms": 171.15
+      },
+      "fused_evidence_result": {
+        "target_decision": "GALAXY",
+        "primary_rationale": "Image structural analysis confirms extended astronomical light distribution.",
+        "evidence_level": "MODERATE",
+        "match_quality": "HIGH_QUALITY_MATCH",
+        "is_conflicting": false,
+        "image_evidence_type": "GALAXY",
+        "galaxy_evidence_strength": "MODERATE",
+        "stellar_evidence_strength": "NONE",
+        "quasar_evidence_strength": "NONE",
+        "nebula_evidence_strength": "NONE",
+        "exoplanet_evidence_status": "NO_CATALOG_MATCH",
+        "provenance_chain": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 0.08,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:03.148882+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.259,
+            "unit": null,
+            "match_distance_arcsec": 0.03,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:03.148955+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "scientific_disclaimer": "Extended galaxy evidence established independently by image structural analysis."
+      }
+    },
+    {
+      "target_id": "GALAXY-ZOO-261146",
+      "ra": 233.03894,
+      "dec": 23.283297,
+      "category": "GALAXY",
+      "local_image_result": {
+        "predicted_object_type": "GALAXY",
+        "object_type_status": "EXPERIMENTAL_VISUAL_EVIDENCE",
+        "evidence_quality": "STRONG",
+        "object_evidence_source": [
+          "Image structural analysis",
+          "OpenCLIP zero-shot"
+        ],
+        "visual_similarity_score": 0.5927,
+        "object_margin": 0.3985,
+        "object_confidence": null,
+        "top_class": "GALAXY",
+        "top_score": 0.5927,
+        "second_best_class": "QUASAR",
+        "margin_between_top_and_second": 0.3985,
+        "class_probabilities": {
+          "GALAXY": 0.5927,
+          "STAR": 0.0557,
+          "NEBULA": 0.0729,
+          "QUASAR": 0.1942,
+          "PLANETARY": 0.0298,
+          "UNKNOWN": 0.0547
+        },
+        "point_source_metrics": {
+          "bg_level": 0.0078,
+          "bg_std": 0.0113,
+          "peak_intensity": 0.5725,
+          "peak_to_bg": 72.99,
+          "concentration_ratio": 0.0747,
+          "compactness": 0.013,
+          "fwhm_proxy_px": 59.29,
+          "extent_px": 11588,
+          "extended_score": 0.742,
+          "diffuse_emission_score": 0.6733,
+          "point_source_score": 0.2336,
+          "connected_region_area": 11588,
+          "connected_asymmetry": 0.0437,
+          "spatial_dispersion": 11235.58,
+          "is_point_source_like": false,
+          "is_diffuse_like": true,
+          "is_extended_like": true,
+          "evidence_strength": "DIFFUSE"
+        },
+        "evidence": [
+          "Extended astronomical light distribution (Extended score: 0.74, FWHM: 59.3px)",
+          "Visual similarity profile matches galaxy candidate (0.59)"
+        ],
+        "latency_ms": 143.6
+      },
+      "fused_evidence_result": {
+        "target_decision": "GALAXY",
+        "primary_rationale": "Image structural analysis confirms extended astronomical light distribution.",
+        "evidence_level": "MODERATE",
+        "match_quality": "HIGH_QUALITY_MATCH",
+        "is_conflicting": false,
+        "image_evidence_type": "GALAXY",
+        "galaxy_evidence_strength": "MODERATE",
+        "stellar_evidence_strength": "NONE",
+        "quasar_evidence_strength": "NONE",
+        "nebula_evidence_strength": "NONE",
+        "exoplanet_evidence_status": "NO_CATALOG_MATCH",
+        "provenance_chain": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": 4.7963,
+            "unit": "mas",
+            "match_distance_arcsec": 11.53,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:12.491882+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.179,
+            "unit": null,
+            "match_distance_arcsec": 0.37,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:12.491941+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "Gaia DR3",
+            "field": "spatial_match",
+            "value": "Offset 11.53 arcsec",
+            "unit": null,
+            "match_distance_arcsec": null,
+            "provenance": "spatial_analysis",
+            "timestamp": "2026-09-16T17:46:29.467996+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "scientific_disclaimer": "Extended galaxy evidence established independently by image structural analysis."
+      }
+    },
+    {
+      "target_id": "GALAXY-ZOO-66345",
+      "ra": 246.6076,
+      "dec": 34.280483,
+      "category": "GALAXY",
+      "local_image_result": {
+        "predicted_object_type": "GALAXY",
+        "object_type_status": "EXPERIMENTAL_VISUAL_EVIDENCE",
+        "evidence_quality": "MODERATE",
+        "object_evidence_source": [
+          "Image structural analysis",
+          "OpenCLIP zero-shot"
+        ],
+        "visual_similarity_score": 0.2605,
+        "object_margin": 0.0341,
+        "object_confidence": null,
+        "top_class": "STAR",
+        "top_score": 0.2605,
+        "second_best_class": "GALAXY",
+        "margin_between_top_and_second": 0.0341,
+        "class_probabilities": {
+          "GALAXY": 0.2264,
+          "STAR": 0.2605,
+          "NEBULA": 0.0781,
+          "QUASAR": 0.2184,
+          "PLANETARY": 0.0958,
+          "UNKNOWN": 0.1209
+        },
+        "point_source_metrics": {
+          "bg_level": 0.0118,
+          "bg_std": 0.0154,
+          "peak_intensity": 0.6392,
+          "peak_to_bg": 54.33,
+          "concentration_ratio": 0.0717,
+          "compactness": 0.0105,
+          "fwhm_proxy_px": 73.09,
+          "extent_px": 18212,
+          "extended_score": 0.8414,
+          "diffuse_emission_score": 0.7334,
+          "point_source_score": 0.2323,
+          "connected_region_area": 18212,
+          "connected_asymmetry": 0.0586,
+          "spatial_dispersion": 12239.2,
+          "is_point_source_like": false,
+          "is_diffuse_like": true,
+          "is_extended_like": true,
+          "evidence_strength": "DIFFUSE"
+        },
+        "evidence": [
+          "Extended astronomical light distribution (Extended score: 0.84, FWHM: 73.1px)",
+          "Central galactic core matched stellar/AGN prompt (0.26), but image structural analysis confirms extended galaxy profile"
+        ],
+        "latency_ms": 149.6
+      },
+      "fused_evidence_result": {
+        "target_decision": "GALAXY",
+        "primary_rationale": "Image structural analysis confirms extended astronomical light distribution.",
+        "evidence_level": "MODERATE",
+        "match_quality": "HIGH_QUALITY_MATCH",
+        "is_conflicting": false,
+        "image_evidence_type": "GALAXY",
+        "galaxy_evidence_strength": "MODERATE",
+        "stellar_evidence_strength": "NONE",
+        "quasar_evidence_strength": "NONE",
+        "nebula_evidence_strength": "NONE",
+        "exoplanet_evidence_status": "NO_CATALOG_MATCH",
+        "provenance_chain": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 0.06,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:21.604702+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.254,
+            "unit": null,
+            "match_distance_arcsec": 1.36,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:21.604742+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "scientific_disclaimer": "Extended galaxy evidence established independently by image structural analysis."
+      }
+    },
+    {
+      "target_id": "STELLAR-CANDIDATE-587738067813924971",
+      "ra": 149.08499,
+      "dec": 69.7001,
+      "category": "STAR_CANDIDATE",
+      "local_image_result": {
+        "predicted_object_type": "AMBIGUOUS_POINT_SOURCE",
+        "object_type_status": "INSUFFICIENT_VISUAL_EVIDENCE",
+        "evidence_quality": "INSUFFICIENT",
+        "object_evidence_source": [
+          "Image structural analysis",
+          "OpenCLIP zero-shot"
+        ],
+        "visual_similarity_score": 0.2533,
+        "object_margin": 0.0507,
+        "object_confidence": null,
+        "top_class": "QUASAR",
+        "top_score": 0.2533,
+        "second_best_class": "UNKNOWN",
+        "margin_between_top_and_second": 0.0507,
+        "class_probabilities": {
+          "GALAXY": 0.1853,
+          "STAR": 0.0795,
+          "NEBULA": 0.1416,
+          "QUASAR": 0.2533,
+          "PLANETARY": 0.1377,
+          "UNKNOWN": 0.2026
+        },
+        "point_source_metrics": {
+          "bg_level": 0.0392,
+          "bg_std": 0.0,
+          "peak_intensity": 0.0392,
+          "peak_to_bg": 1.0,
+          "concentration_ratio": 0.0,
+          "compactness": 0.0,
+          "fwhm_proxy_px": 64.0,
+          "extent_px": 0,
+          "extended_score": 0.6,
+          "diffuse_emission_score": 0.4,
+          "point_source_score": 0.0,
+          "connected_region_area": 0,
+          "connected_asymmetry": 0.0,
+          "spatial_dispersion": 0.0,
+          "is_point_source_like": false,
+          "is_diffuse_like": false,
+          "is_extended_like": false,
+          "evidence_strength": "WEAK"
+        },
+        "evidence": [
+          "Point-like astronomical source detected (Compactness: 0.00, FWHM: 64.0px)",
+          "Visual imaging alone does not provide enough evidence to reliably distinguish a star from a quasar without spectroscopic redshift or multi-band catalog match"
+        ],
+        "latency_ms": 143.11
+      },
+      "fused_evidence_result": {
+        "target_decision": "AMBIGUOUS_POINT_SOURCE",
+        "primary_rationale": "Unresolved compact point source. Multi-modal evidence is insufficient to reliably separate stellar and quasar interpretations without spectroscopy or astrometry.",
+        "evidence_level": "NONE",
+        "match_quality": "NO_MATCH",
+        "is_conflicting": false,
+        "image_evidence_type": "POINT_SOURCE",
+        "galaxy_evidence_strength": "NONE",
+        "stellar_evidence_strength": "NONE",
+        "quasar_evidence_strength": "NONE",
+        "nebula_evidence_strength": "NONE",
+        "exoplanet_evidence_status": "NO_CATALOG_MATCH",
+        "provenance_chain": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 11.9,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:30.096584+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "scientific_disclaimer": "Optical imaging alone cannot resolve star vs quasar ambiguity. Preserved as Ambiguous Point Source."
+      }
+    },
+    {
+      "target_id": "STELLAR-CANDIDATE-588017703470628953",
+      "ra": 187.69814,
+      "dec": 12.388354,
+      "category": "STAR_CANDIDATE",
+      "local_image_result": {
+        "predicted_object_type": "AMBIGUOUS_POINT_SOURCE",
+        "object_type_status": "INSUFFICIENT_VISUAL_EVIDENCE",
+        "evidence_quality": "INSUFFICIENT",
+        "object_evidence_source": [
+          "Image structural analysis",
+          "OpenCLIP zero-shot"
+        ],
+        "visual_similarity_score": 0.2533,
+        "object_margin": 0.0507,
+        "object_confidence": null,
+        "top_class": "QUASAR",
+        "top_score": 0.2533,
+        "second_best_class": "UNKNOWN",
+        "margin_between_top_and_second": 0.0507,
+        "class_probabilities": {
+          "GALAXY": 0.1853,
+          "STAR": 0.0795,
+          "NEBULA": 0.1416,
+          "QUASAR": 0.2533,
+          "PLANETARY": 0.1377,
+          "UNKNOWN": 0.2026
+        },
+        "point_source_metrics": {
+          "bg_level": 0.0392,
+          "bg_std": 0.0,
+          "peak_intensity": 0.0392,
+          "peak_to_bg": 1.0,
+          "concentration_ratio": 0.0,
+          "compactness": 0.0,
+          "fwhm_proxy_px": 64.0,
+          "extent_px": 0,
+          "extended_score": 0.6,
+          "diffuse_emission_score": 0.4,
+          "point_source_score": 0.0,
+          "connected_region_area": 0,
+          "connected_asymmetry": 0.0,
+          "spatial_dispersion": 0.0,
+          "is_point_source_like": false,
+          "is_diffuse_like": false,
+          "is_extended_like": false,
+          "evidence_strength": "WEAK"
+        },
+        "evidence": [
+          "Point-like astronomical source detected (Compactness: 0.00, FWHM: 64.0px)",
+          "Visual imaging alone does not provide enough evidence to reliably distinguish a star from a quasar without spectroscopic redshift or multi-band catalog match"
+        ],
+        "latency_ms": 142.18
+      },
+      "fused_evidence_result": {
+        "target_decision": "AMBIGUOUS_POINT_SOURCE",
+        "primary_rationale": "Unresolved compact point source. Multi-modal evidence is insufficient to reliably separate stellar and quasar interpretations without spectroscopy or astrometry.",
+        "evidence_level": "NONE",
+        "match_quality": "NO_MATCH",
+        "is_conflicting": false,
+        "image_evidence_type": "POINT_SOURCE",
+        "galaxy_evidence_strength": "NONE",
+        "stellar_evidence_strength": "NONE",
+        "quasar_evidence_strength": "NONE",
+        "nebula_evidence_strength": "NONE",
+        "exoplanet_evidence_status": "NO_CATALOG_MATCH",
+        "provenance_chain": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 16.14,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:41.313417+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "scientific_disclaimer": "Optical imaging alone cannot resolve star vs quasar ambiguity. Preserved as Ambiguous Point Source."
+      }
+    },
+    {
+      "target_id": "STELLAR-CANDIDATE-588017726012129401",
+      "ra": 187.43544,
+      "dec": 8.008245,
+      "category": "STAR_CANDIDATE",
+      "local_image_result": {
+        "predicted_object_type": "AMBIGUOUS_POINT_SOURCE",
+        "object_type_status": "INSUFFICIENT_VISUAL_EVIDENCE",
+        "evidence_quality": "INSUFFICIENT",
+        "object_evidence_source": [
+          "Image structural analysis",
+          "OpenCLIP zero-shot"
+        ],
+        "visual_similarity_score": 0.2533,
+        "object_margin": 0.0507,
+        "object_confidence": null,
+        "top_class": "QUASAR",
+        "top_score": 0.2533,
+        "second_best_class": "UNKNOWN",
+        "margin_between_top_and_second": 0.0507,
+        "class_probabilities": {
+          "GALAXY": 0.1853,
+          "STAR": 0.0795,
+          "NEBULA": 0.1416,
+          "QUASAR": 0.2533,
+          "PLANETARY": 0.1377,
+          "UNKNOWN": 0.2026
+        },
+        "point_source_metrics": {
+          "bg_level": 0.0392,
+          "bg_std": 0.0,
+          "peak_intensity": 0.0392,
+          "peak_to_bg": 1.0,
+          "concentration_ratio": 0.0,
+          "compactness": 0.0,
+          "fwhm_proxy_px": 64.0,
+          "extent_px": 0,
+          "extended_score": 0.6,
+          "diffuse_emission_score": 0.4,
+          "point_source_score": 0.0,
+          "connected_region_area": 0,
+          "connected_asymmetry": 0.0,
+          "spatial_dispersion": 0.0,
+          "is_point_source_like": false,
+          "is_diffuse_like": false,
+          "is_extended_like": false,
+          "evidence_strength": "WEAK"
+        },
+        "evidence": [
+          "Point-like astronomical source detected (Compactness: 0.00, FWHM: 64.0px)",
+          "Visual imaging alone does not provide enough evidence to reliably distinguish a star from a quasar without spectroscopic redshift or multi-band catalog match"
+        ],
+        "latency_ms": 142.88
+      },
+      "fused_evidence_result": {
+        "target_decision": "AMBIGUOUS_POINT_SOURCE",
+        "primary_rationale": "Unresolved compact point source. Multi-modal evidence is insufficient to reliably separate stellar and quasar interpretations without spectroscopy or astrometry.",
+        "evidence_level": "NONE",
+        "match_quality": "HIGH_QUALITY_MATCH",
+        "is_conflicting": false,
+        "image_evidence_type": "POINT_SOURCE",
+        "galaxy_evidence_strength": "NONE",
+        "stellar_evidence_strength": "NONE",
+        "quasar_evidence_strength": "NONE",
+        "nebula_evidence_strength": "NONE",
+        "exoplanet_evidence_status": "NO_CATALOG_MATCH",
+        "provenance_chain": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 0.06,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:49.684434+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": -0.192,
+            "unit": null,
+            "match_distance_arcsec": 17.58,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:49.684473+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "scientific_disclaimer": "Optical imaging alone cannot resolve star vs quasar ambiguity. Preserved as Ambiguous Point Source."
+      }
+    },
+    {
+      "target_id": "SURVEY-TARGET-227418",
+      "ra": 144.80423,
+      "dec": 32.682613,
+      "category": "DIVERSE_SURVEY_TARGET",
+      "local_image_result": {
+        "predicted_object_type": "ASTRONOMICAL_SOURCE_AMBIGUOUS",
+        "object_type_status": "INSUFFICIENT_VISUAL_EVIDENCE",
+        "evidence_quality": "INSUFFICIENT",
+        "object_evidence_source": [
+          "OpenCLIP zero-shot"
+        ],
+        "visual_similarity_score": 0.3687,
+        "object_margin": 0.0505,
+        "object_confidence": null,
+        "top_class": "GALAXY",
+        "top_score": 0.3687,
+        "second_best_class": "QUASAR",
+        "margin_between_top_and_second": 0.0505,
+        "class_probabilities": {
+          "GALAXY": 0.3687,
+          "STAR": 0.1482,
+          "NEBULA": 0.0532,
+          "QUASAR": 0.3182,
+          "PLANETARY": 0.0445,
+          "UNKNOWN": 0.0672
+        },
+        "point_source_metrics": {
+          "bg_level": 0.0196,
+          "bg_std": 0.0155,
+          "peak_intensity": 0.7765,
+          "peak_to_bg": 39.6,
+          "concentration_ratio": 0.0734,
+          "compactness": 0.0136,
+          "fwhm_proxy_px": 55.01,
+          "extent_px": 25287,
+          "extended_score": 0.9457,
+          "diffuse_emission_score": 0.7957,
+          "point_source_score": 0.233,
+          "connected_region_area": 25287,
+          "connected_asymmetry": 0.3269,
+          "spatial_dispersion": 14007.98,
+          "is_point_source_like": false,
+          "is_diffuse_like": true,
+          "is_extended_like": true,
+          "evidence_strength": "DIFFUSE"
+        },
+        "evidence": [
+          "Ambiguous visual similarity between top candidate GALAXY and competing hypotheses"
+        ],
+        "latency_ms": 154.31
+      },
+      "fused_evidence_result": {
+        "target_decision": "ASTRONOMICAL_SOURCE_AMBIGUOUS",
+        "primary_rationale": "Astronomical light profile detected, but multi-modal evidence is weak or insufficient to establish definitive classification.",
+        "evidence_level": "WEAK",
+        "match_quality": "NO_MATCH",
+        "is_conflicting": false,
+        "image_evidence_type": "ASTRONOMICAL_SOURCE_AMBIGUOUS",
+        "galaxy_evidence_strength": "NONE",
+        "stellar_evidence_strength": "NONE",
+        "quasar_evidence_strength": "NONE",
+        "nebula_evidence_strength": "NONE",
+        "exoplanet_evidence_status": "NO_CATALOG_MATCH",
+        "provenance_chain": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": 0.0429,
+            "unit": "mas",
+            "match_distance_arcsec": 15.88,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:58.962463+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": -0.282,
+            "unit": null,
+            "match_distance_arcsec": 15.74,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:58.962524+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "scientific_disclaimer": "Preserved in conservative ambiguous state pending higher-resolution multi-band or spectroscopic data."
+      }
+    },
+    {
+      "target_id": "SURVEY-TARGET-59289",
+      "ra": 173.30031,
+      "dec": 6.424842,
+      "category": "DIVERSE_SURVEY_TARGET",
+      "local_image_result": {
+        "predicted_object_type": "AMBIGUOUS_POINT_SOURCE",
+        "object_type_status": "INSUFFICIENT_VISUAL_EVIDENCE",
+        "evidence_quality": "INSUFFICIENT",
+        "object_evidence_source": [
+          "Image structural analysis",
+          "OpenCLIP zero-shot"
+        ],
+        "visual_similarity_score": 0.3289,
+        "object_margin": 0.0584,
+        "object_confidence": null,
+        "top_class": "QUASAR",
+        "top_score": 0.3289,
+        "second_best_class": "GALAXY",
+        "margin_between_top_and_second": 0.0584,
+        "class_probabilities": {
+          "GALAXY": 0.2705,
+          "STAR": 0.1736,
+          "NEBULA": 0.0473,
+          "QUASAR": 0.3289,
+          "PLANETARY": 0.1013,
+          "UNKNOWN": 0.0785
+        },
+        "point_source_metrics": {
+          "bg_level": 0.0235,
+          "bg_std": 0.0575,
+          "peak_intensity": 0.7647,
+          "peak_to_bg": 32.5,
+          "concentration_ratio": 0.0724,
+          "compactness": 0.0133,
+          "fwhm_proxy_px": 55.43,
+          "extent_px": 8215,
+          "extended_score": 0.6929,
+          "diffuse_emission_score": 0.6441,
+          "point_source_score": 0.2326,
+          "connected_region_area": 8215,
+          "connected_asymmetry": 0.081,
+          "spatial_dispersion": 11331.72,
+          "is_point_source_like": false,
+          "is_diffuse_like": true,
+          "is_extended_like": true,
+          "evidence_strength": "DIFFUSE"
+        },
+        "evidence": [
+          "Point-like astronomical source detected (Compactness: 0.01, FWHM: 55.4px)",
+          "Visual imaging alone does not provide enough evidence to reliably distinguish a star from a quasar without spectroscopic redshift or multi-band catalog match"
+        ],
+        "latency_ms": 150.03
+      },
+      "fused_evidence_result": {
+        "target_decision": "AMBIGUOUS_POINT_SOURCE",
+        "primary_rationale": "Unresolved compact point source. Multi-modal evidence is insufficient to reliably separate stellar and quasar interpretations without spectroscopy or astrometry.",
+        "evidence_level": "NONE",
+        "match_quality": "HIGH_QUALITY_MATCH",
+        "is_conflicting": false,
+        "image_evidence_type": "POINT_SOURCE",
+        "galaxy_evidence_strength": "NONE",
+        "stellar_evidence_strength": "NONE",
+        "quasar_evidence_strength": "NONE",
+        "nebula_evidence_strength": "NONE",
+        "exoplanet_evidence_status": "NO_CATALOG_MATCH",
+        "provenance_chain": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 0.07,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:15:09.699511+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.219,
+            "unit": null,
+            "match_distance_arcsec": 17.14,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:15:09.699567+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "scientific_disclaimer": "Optical imaging alone cannot resolve star vs quasar ambiguity. Preserved as Ambiguous Point Source."
+      }
+    },
+    {
+      "target_id": "SURVEY-TARGET-7212",
+      "ra": 128.3999,
+      "dec": 50.648518,
+      "category": "DIVERSE_SURVEY_TARGET",
+      "local_image_result": {
+        "predicted_object_type": "AMBIGUOUS_POINT_SOURCE",
+        "object_type_status": "INSUFFICIENT_VISUAL_EVIDENCE",
+        "evidence_quality": "INSUFFICIENT",
+        "object_evidence_source": [
+          "Image structural analysis",
+          "OpenCLIP zero-shot"
+        ],
+        "visual_similarity_score": 0.3252,
+        "object_margin": 0.0785,
+        "object_confidence": null,
+        "top_class": "QUASAR",
+        "top_score": 0.3252,
+        "second_best_class": "STAR",
+        "margin_between_top_and_second": 0.0785,
+        "class_probabilities": {
+          "GALAXY": 0.1685,
+          "STAR": 0.2467,
+          "NEBULA": 0.0855,
+          "QUASAR": 0.3252,
+          "PLANETARY": 0.0791,
+          "UNKNOWN": 0.0951
+        },
+        "point_source_metrics": {
+          "bg_level": 0.0196,
+          "bg_std": 0.0886,
+          "peak_intensity": 0.7647,
+          "peak_to_bg": 39.0,
+          "concentration_ratio": 0.0681,
+          "compactness": 0.0096,
+          "fwhm_proxy_px": 76.15,
+          "extent_px": 8730,
+          "extended_score": 0.7023,
+          "diffuse_emission_score": 0.6505,
+          "point_source_score": 0.2306,
+          "connected_region_area": 8730,
+          "connected_asymmetry": 0.4858,
+          "spatial_dispersion": 14719.56,
+          "is_point_source_like": false,
+          "is_diffuse_like": true,
+          "is_extended_like": true,
+          "evidence_strength": "DIFFUSE"
+        },
+        "evidence": [
+          "Point-like astronomical source detected (Compactness: 0.01, FWHM: 76.2px)",
+          "Visual imaging alone does not provide enough evidence to reliably distinguish a star from a quasar without spectroscopic redshift or multi-band catalog match"
+        ],
+        "latency_ms": 147.82
+      },
+      "fused_evidence_result": {
+        "target_decision": "AMBIGUOUS_POINT_SOURCE",
+        "primary_rationale": "Unresolved compact point source. Multi-modal evidence is insufficient to reliably separate stellar and quasar interpretations without spectroscopy or astrometry.",
+        "evidence_level": "NONE",
+        "match_quality": "HIGH_QUALITY_MATCH",
+        "is_conflicting": false,
+        "image_evidence_type": "POINT_SOURCE",
+        "galaxy_evidence_strength": "NONE",
+        "stellar_evidence_strength": "NONE",
+        "quasar_evidence_strength": "NONE",
+        "nebula_evidence_strength": "NONE",
+        "exoplanet_evidence_status": "NO_CATALOG_MATCH",
+        "provenance_chain": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": 0.5569,
+            "unit": "mas",
+            "match_distance_arcsec": 15.42,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:15:19.545229+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.171,
+            "unit": null,
+            "match_distance_arcsec": 0.04,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:15:19.545279+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "scientific_disclaimer": "Optical imaging alone cannot resolve star vs quasar ambiguity. Preserved as Ambiguous Point Source."
+      }
+    }
+  ]
+}

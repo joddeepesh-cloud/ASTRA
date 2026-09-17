@@ -1,0 +1,85 @@
+{
+  "targets": [
+    {
+      "target_id": "GALAXY-ZOO-20027",
+      "asset_id": 20027,
+      "dr7objid": 587726033859772519,
+      "ra": 181.34164,
+      "dec": 3.537008,
+      "category": "GALAXY",
+      "description": "Known SDSS Galaxy Zoo 2 galaxy (Morphology: SMOOTH)"
+    },
+    {
+      "target_id": "GALAXY-ZOO-261146",
+      "asset_id": 261146,
+      "dr7objid": 587739652105371766,
+      "ra": 233.03894,
+      "dec": 23.283297,
+      "category": "GALAXY",
+      "description": "Known SDSS Galaxy Zoo 2 galaxy (Morphology: DISK_FEATURE)"
+    },
+    {
+      "target_id": "GALAXY-ZOO-66345",
+      "asset_id": 66345,
+      "dr7objid": 587733398647275747,
+      "ra": 246.6076,
+      "dec": 34.280483,
+      "category": "GALAXY",
+      "description": "Known SDSS Galaxy Zoo 2 galaxy (Morphology: SPIRAL)"
+    },
+    {
+      "target_id": "STELLAR-CANDIDATE-587738067813924971",
+      "asset_id": null,
+      "dr7objid": 587738067813924971,
+      "ra": 149.08499,
+      "dec": 69.7001,
+      "category": "STAR_CANDIDATE",
+      "description": "Compact unresolved stellar/artifact candidate (Star vote fraction: 0.45)"
+    },
+    {
+      "target_id": "STELLAR-CANDIDATE-588017703470628953",
+      "asset_id": null,
+      "dr7objid": 588017703470628953,
+      "ra": 187.69814,
+      "dec": 12.388354,
+      "category": "STAR_CANDIDATE",
+      "description": "Compact unresolved stellar/artifact candidate (Star vote fraction: 0.48)"
+    },
+    {
+      "target_id": "STELLAR-CANDIDATE-588017726012129401",
+      "asset_id": null,
+      "dr7objid": 588017726012129401,
+      "ra": 187.43544,
+      "dec": 8.008245,
+      "category": "STAR_CANDIDATE",
+      "description": "Compact unresolved stellar/artifact candidate (Star vote fraction: 0.43)"
+    },
+    {
+      "target_id": "SURVEY-TARGET-227418",
+      "asset_id": 227418,
+      "dr7objid": 588017978878656612,
+      "ra": 144.80423,
+      "dec": 32.682613,
+      "category": "DIVERSE_SURVEY_TARGET",
+      "description": "Diverse SDSS survey target cutout (Morphology: SPIRAL)"
+    },
+    {
+      "target_id": "SURVEY-TARGET-59289",
+      "asset_id": 59289,
+      "dr7objid": 587732701260939412,
+      "ra": 173.30031,
+      "dec": 6.424842,
+      "category": "DIVERSE_SURVEY_TARGET",
+      "description": "Diverse SDSS survey target cutout (Morphology: SMOOTH)"
+    },
+    {
+      "target_id": "SURVEY-TARGET-7212",
+      "asset_id": 7212,
+      "dr7objid": 587725470669013213,
+      "ra": 128.3999,
+      "dec": 50.648518,
+      "category": "DIVERSE_SURVEY_TARGET",
+      "description": "Diverse SDSS survey target cutout (Morphology: SMOOTH)"
+    }
+  ]
+}

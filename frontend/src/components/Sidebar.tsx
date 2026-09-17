@@ -13,26 +13,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onGoT
     { id: 'briefing', label: 'Mission Briefing', icon: Compass },
     { id: 'research', label: 'Research & Upload', icon: Search },
     { id: 'observations', label: 'Observations', icon: Radio },
-    { id: 'anomalies', label: 'Anomaly Queue', icon: ShieldAlert, badge: '127' },
+    { id: 'anomalies', label: 'Anomaly Queue', icon: ShieldAlert },
     { id: 'library', label: 'Observation Library', icon: Library },
     { id: 'history', label: 'Analysis History', icon: History },
     { id: 'copilot', label: 'Space Help AI', icon: Bot, badge: 'ACTIVE' },
   ];
 
   return (
-    <aside className="w-64 bg-[#070B11]/95 border-r border-[#252D37]/80 flex flex-col justify-between h-screen sticky top-0 z-40 backdrop-blur-xl selection:bg-[#C7CDD5]/30">
-      {/* Brand Header */}
-      <div className="p-5 space-y-6">
-        <div className="flex items-center justify-between">
+    <aside className="w-64 bg-[#070912] border-r border-[#21133B] flex flex-col justify-between h-full shrink-0 z-40 relative select-none overflow-y-auto">
+      {/* Brand Header & Navigation */}
+      <div className="p-4 space-y-5 flex-1 flex flex-col min-h-0">
+        <div className="flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 cursor-pointer" onClick={onGoToLanding}>
-            <div className="w-9 h-9 rounded-lg bg-[#151B23] border border-[#C7CDD5]/40 flex items-center justify-center text-[#D5DAE0] shadow-md shadow-black/50">
-              <Rocket className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-[#15102A] border border-[#9B7FD4]/40 flex items-center justify-center text-[#ECEAF2] shadow-md shadow-black/60">
+              <Rocket className="w-5 h-5 text-[#8FD3FF]" />
             </div>
             <div>
-              <span className="text-lg font-bold font-mono-tech text-[#F2F4F7] tracking-widest block leading-none">
+              <span className="text-lg font-bold font-mono-tech text-white tracking-widest block leading-none">
                 ASTRA
               </span>
-              <span className="text-[9px] font-mono-tech text-[#A8B0BA] tracking-wider uppercase mt-0.5 block">
+              <span className="text-[9px] font-mono-tech text-[#55C7D9] tracking-wider uppercase mt-0.5 block font-semibold">
                 OBSERVATORY SYSTEM
               </span>
             </div>
@@ -41,16 +41,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onGoT
           <button
             onClick={onGoToLanding}
             title="Return to Landing Page"
-            className="p-1.5 rounded text-[#717985] hover:text-[#D5DAE0] hover:bg-[#151B23] border border-transparent hover:border-[#252D37] transition-all cursor-pointer"
+            className="p-1.5 rounded text-[#8E8A9D] hover:text-white hover:bg-[#15102A] border border-transparent hover:border-[#21133B] transition-all cursor-pointer"
           >
             <ExternalLink className="w-4 h-4" />
           </button>
         </div>
 
         {/* Navigation Items */}
-        <nav className="space-y-1">
-          <span className="text-[10px] font-mono-tech font-semibold text-[#717985] uppercase tracking-widest px-3 block mb-2">
-            NAVIGATION
+        <nav className="space-y-1 overflow-y-auto flex-1 pr-0.5">
+          <span className="text-[10px] font-mono-tech font-bold text-[#8E8A9D] uppercase tracking-widest px-3 block mb-2">
+            NAVIGATION CONSOLE
           </span>
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -59,23 +59,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onGoT
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-mono-tech transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-mono-tech transition-all cursor-pointer relative ${
                   isActive
-                    ? 'bg-[#252D37] text-[#F2F4F7] border border-[#C7CDD5]/50 font-bold shadow-md shadow-black/40'
-                    : 'text-[#A8B0BA] hover:text-[#F2F4F7] hover:bg-[#151B23]/70 border border-transparent'
+                    ? 'bg-[#15102A] text-white border border-[#9B7FD4]/50 font-bold shadow-lg shadow-black/60'
+                    : 'text-[#8E8A9D] hover:text-[#ECEAF2] hover:bg-[#15102A]/60 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#8FAFC2]' : 'text-[#717985]'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#8FD3FF]' : 'text-[#8E8A9D]'}`} />
                   <span>{item.label}</span>
                 </div>
-                {item.badge && (
+
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#8FD3FF] shadow-sm shadow-[#8FD3FF]" />
+                )}
+
+                {item.badge && !isActive && (
                   <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded font-mono-tech font-bold ${
-                      item.id === 'anomalies'
-                        ? 'bg-[#3A1D1D] text-[#D6A84F] border border-[#D6A84F]/40'
-                        : 'bg-[#15232E] text-[#8FAFC2] border border-[#8FAFC2]/40'
-                    }`}
+                    className="text-[9px] px-1.5 py-0.5 rounded font-mono-tech font-bold bg-[#15102A] text-[#8FD3FF] border border-[#8FD3FF]/30"
                   >
                     {item.badge}
                   </span>
@@ -86,25 +87,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onGoT
         </nav>
       </div>
 
-      {/* Settings & Bottom Status */}
-      <div className="p-4 border-t border-[#151B23] space-y-3">
+      {/* Settings & Bottom Status (Anchored Footer) */}
+      <div className="p-4 border-t border-[#21133B] space-y-3 shrink-0 bg-[#070912]">
         <button
-          onClick={() => setActiveTab('research')}
-          className="w-full flex items-center gap-3 px-3 py-2 text-xs font-mono-tech text-[#717985] hover:text-[#D5DAE0] hover:bg-[#151B23]/60 rounded-lg transition-all cursor-pointer"
+          onClick={() => setActiveTab('settings')}
+          className={`w-full flex items-center justify-between px-3.5 py-2 text-xs font-mono-tech rounded-xl transition-all cursor-pointer ${
+            activeTab === 'settings'
+              ? 'bg-[#15102A] text-[#9B7FD4] border border-[#9B7FD4]/50 font-bold'
+              : 'text-[#8E8A9D] hover:text-[#ECEAF2] hover:bg-[#15102A]/60 border border-transparent'
+          }`}
         >
-          <Settings className="w-4 h-4 text-[#717985]" />
-          <span>System Settings</span>
+          <div className="flex items-center gap-3">
+            <Settings className={`w-4 h-4 ${activeTab === 'settings' ? 'text-[#9B7FD4]' : 'text-[#8E8A9D]'}`} />
+            <span>System Settings</span>
+          </div>
+          {activeTab === 'settings' && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#9B7FD4] shadow-sm shadow-[#9B7FD4]" />
+          )}
         </button>
 
-        <div className="p-3 bg-[#0D1219] rounded-lg border border-[#252D37] space-y-1.5 font-mono-tech">
-          <div className="flex justify-between items-center text-[10px] text-[#A8B0BA]">
+        <div className="p-3 bg-[#0D0A1C] rounded-xl border border-[#21133B] space-y-1.5 font-mono-tech">
+          <div className="flex justify-between items-center text-[10px] text-[#8E8A9D]">
             <span>SYSTEM</span>
-            <span className="text-[#5FC7A1] font-bold">NOMINAL</span>
+            <span className="text-[#58BFA7] font-bold">NOMINAL</span>
           </div>
-          <div className="w-full bg-[#030508] h-1.5 rounded-full overflow-hidden">
-            <div className="bg-[#5FC7A1] h-full w-[94%]" />
+          <div className="w-full bg-[#03040A] h-1.5 rounded-full overflow-hidden border border-[#21133B]">
+            <div className="bg-[#58BFA7] h-full w-[94%]" />
           </div>
-          <div className="text-[9px] text-[#717985] text-right">
+          <div className="text-[9px] text-[#8E8A9D] text-right">
             DOWNLINK BANDWIDTH: 86% SAVED
           </div>
         </div>

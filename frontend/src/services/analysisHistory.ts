@@ -36,6 +36,8 @@ export function recordLiveAnalysis(
   const isUncertain = domainDecision === 'UNCERTAIN';
   const triageScore = result.experimental_triage_score ?? 0.0;
 
+  const resolvedObjType = result.object_type || (result.domain_validation?.decision !== 'COMPATIBLE' ? 'INCOMPATIBLE' : 'ASTRONOMICAL_SOURCE_UNRESOLVED');
+
   const newRecord: AnalysisHistoryRecord = {
     id: `HIST-${Date.now()}`,
     timestamp: new Date().toISOString(),
@@ -43,8 +45,9 @@ export function recordLiveAnalysis(
     observation_id: observationId,
     filename: fileName,
     domain_status: domainDecision as 'COMPATIBLE' | 'UNCERTAIN' | 'INCOMPATIBLE',
-    morphology: (isCompatible || isUncertain) ? (result.predicted_class || 'OTHER') : 'UNVERIFIED',
-    confidence: result.class_confidence ?? 0.0,
+    object_type: resolvedObjType,
+    morphology: (isCompatible || isUncertain) ? (result.predicted_class || result.morphology || 'OTHER') : 'UNVERIFIED',
+    confidence: result.class_confidence ?? null,
     triage_score: triageScore,
     priority: (result.priority_level as PriorityLevel) || 'LOW',
     status: (!isCompatible && !isUncertain) ? 'REJECTED' : triageScore > 0.8 ? 'FLAGGED_FOR_REVIEW' : 'COMPLETED',

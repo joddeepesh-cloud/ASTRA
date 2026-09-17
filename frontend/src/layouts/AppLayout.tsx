@@ -11,7 +11,9 @@ import { ResearchModePage } from '../pages/ResearchModePage';
 import { CopilotPage } from '../pages/CopilotPage';
 import { HistoryPage } from '../pages/HistoryPage';
 import { AnomalyQueuePage } from '../pages/AnomalyQueuePage';
+import { SettingsPage } from '../pages/SettingsPage';
 import libraryData from '../data/observationLibrary.json';
+import { CosmicBackground } from '../components/CosmicBackground';
 
 import type { TriageResponse } from '../types/api';
 
@@ -53,8 +55,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
       dec: 0.0,
       gz2class: result.predicted_class || 'SMOOTH',
       broad_morphology: broadMorph,
-      object_type: 'Galaxy',
-      confidence: result.class_confidence ?? 1.0,
+      object_type: (result.object_type === 'GALAXY' || result.object_type === 'Galaxy') ? 'Galaxy' : 'Unresolved astronomical source',
+      confidence: result.class_confidence ?? 0.0,
       anomaly_score: result.experimental_triage_score ?? 0.0,
       ood_score: result.novelty_score ?? 0.0,
       priority: result.priority_level || 'LOW',
@@ -100,7 +102,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
         dec: 0.0,
         gz2class: historyMatch.morphology,
         broad_morphology: historyMatch.morphology === 'SPIRAL' ? 'SPIRAL' : historyMatch.morphology === 'SMOOTH' ? 'SMOOTH' : 'DISK_FEATURE',
-        object_type: 'Galaxy',
+        object_type: (historyMatch.object_type === 'GALAXY' || historyMatch.object_type === 'Galaxy' || historyMatch.filename?.startsWith('LIB-')) ? 'Galaxy' : 'Unresolved astronomical source',
         confidence: historyMatch.confidence,
         anomaly_score: historyMatch.triage_score,
         ood_score: historyMatch.triage_score,
@@ -149,6 +151,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
         return { title: 'Analysis History', subtitle: 'Historical ledger of observation triage runs' };
       case 'copilot':
         return { title: 'AI Mission Copilot', subtitle: 'Automated scientific explanation assistant' };
+      case 'settings':
+        return { title: 'System Settings', subtitle: 'Workstation diagnostics & mission console preferences' };
       default:
         return { title: 'Mission Control', subtitle: 'ASTRA Triage System' };
     }
@@ -157,7 +161,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
   const { title, subtitle } = getPageTitle();
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans relative">
+    <div className="flex h-screen w-screen bg-[#03040A] text-[#ECEAF2] font-sans relative overflow-hidden">
+      <CosmicBackground variant="dashboard" />
       <ToastContainer />
       {/* Sidebar Navigation */}
       <Sidebar
@@ -167,7 +172,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         <TopBar
           title={title}
           subtitle={subtitle}
@@ -175,7 +180,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
           onInspectObservationById={handleInspectObservationById}
         />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 min-h-0 overflow-y-auto relative">
           {activeTab === 'briefing' && (
             <MissionBriefingPage onNavigateTab={(tab) => setActiveTab(tab)} />
           )}
@@ -209,6 +214,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
 
           {activeTab === 'copilot' && (
             <CopilotPage activeObservation={selectedObservation} />
+          )}
+
+          {activeTab === 'settings' && (
+            <SettingsPage />
           )}
         </main>
       </div>

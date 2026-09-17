@@ -1,0 +1,1441 @@
+{
+  "sweep_timestamp": "2026-09-16 17:15:19 UTC",
+  "latency_summary": {
+    "gaia": {
+      "mean_ms": 1648.62,
+      "median_ms": 1751.16,
+      "p95_ms": 2279.63
+    },
+    "sdss": {
+      "mean_ms": 1979.37,
+      "median_ms": 2239.97,
+      "p95_ms": 2491.12
+    },
+    "wise": {
+      "mean_ms": 1536.46,
+      "median_ms": 1213.72,
+      "p95_ms": 2569.25
+    },
+    "tess": {
+      "mean_ms": 1075.49,
+      "median_ms": 1141.57,
+      "p95_ms": 1746.37
+    },
+    "exoplanet": {
+      "mean_ms": 3212.5,
+      "median_ms": 2966.58,
+      "p95_ms": 4378.45
+    }
+  },
+  "results": [
+    {
+      "target_id": "GALAXY-ZOO-20027",
+      "ra": 181.34164,
+      "dec": 3.537008,
+      "category": "GALAXY",
+      "gaia_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 1582.74,
+        "source_id": "3892985986620412544",
+        "match_distance_arcsec": 0.08,
+        "parallax_mas": null,
+        "pmra_mas_yr": null,
+        "pmdec_mas_yr": null,
+        "g_magnitude": 20.162102,
+        "bp_rp_color": 1.31781
+      },
+      "sdss_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 500: InternalServerError",
+        "latency_ms": 2240.94
+      },
+      "wise_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 1184.25,
+        "source_id": "J120521.99+033213.2",
+        "match_distance_arcsec": 0.03,
+        "w1_mag": 13.57,
+        "w2_mag": 13.311,
+        "w3_mag": 9.613,
+        "w4_mag": 8.044,
+        "w1_minus_w2": 0.259
+      },
+      "tess_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 400: 400",
+        "latency_ms": 834.23
+      },
+      "exoplanet_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 2844.35
+      },
+      "evidence_bundle": {
+        "target_coordinates": {
+          "ra": 181.34164,
+          "dec": 3.537008
+        },
+        "catalog_matches": [
+          {
+            "catalog_name": "Gaia DR3",
+            "source_id": "3892985986620412544",
+            "ra": 181.34164,
+            "dec": 3.537008,
+            "match_distance_arcsec": 0.08,
+            "quality_flag": null
+          },
+          {
+            "catalog_name": "ALLWISE",
+            "source_id": "J120521.99+033213.2",
+            "ra": 181.34164,
+            "dec": 3.537008,
+            "match_distance_arcsec": 0.03,
+            "quality_flag": null
+          }
+        ],
+        "astrometry": {
+          "available": true,
+          "source": "Gaia DR3",
+          "source_id": "3892985986620412544",
+          "parallax_mas": null,
+          "proper_motion_ra_mas_yr": null,
+          "proper_motion_dec_mas_yr": null,
+          "g_magnitude": 20.162102,
+          "bp_rp_color": 1.31781,
+          "match_distance_arcsec": 0.08,
+          "quality_indicators": {},
+          "stellar_evidence_score": null
+        },
+        "spectroscopy": {
+          "available": false,
+          "source": "SDSS DR16",
+          "source_id": null,
+          "redshift": null,
+          "spectral_class": null,
+          "is_quasar_catalog_member": false,
+          "broad_emission_lines_detected": false,
+          "match_distance_arcsec": null,
+          "quasar_evidence_score": null
+        },
+        "photometry": {
+          "available": true,
+          "source": "ALLWISE",
+          "source_id": "J120521.99+033213.2",
+          "wise_w1": 13.57,
+          "wise_w2": 13.311,
+          "wise_w3": 9.613,
+          "wise_w4": 8.044,
+          "w1_minus_w2": 0.259,
+          "quality_flags": null,
+          "match_distance_arcsec": 0.03
+        },
+        "time_series": {
+          "available": false,
+          "mission": "TESS",
+          "sector": null,
+          "time": [],
+          "flux": [],
+          "quality": [],
+          "source_id": null,
+          "status": "NO_LIGHT_CURVE_AVAILABLE",
+          "signal_hint": "INSUFFICIENT_DATA"
+        },
+        "exoplanet": {
+          "available": false,
+          "known_host": false,
+          "known_planet": false,
+          "candidate": false,
+          "planet_name": null,
+          "orbital_period_days": null,
+          "transit_depth_ppm": null,
+          "catalog_identifiers": {},
+          "match_distance_arcsec": null
+        },
+        "nebula": {
+          "available": false,
+          "is_catalog_nebula": false,
+          "catalog_name": null,
+          "nebula_type": null,
+          "h_alpha_emission_detected": false,
+          "match_distance_arcsec": null
+        },
+        "provenance_items": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 0.08,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:03.148882+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.259,
+            "unit": null,
+            "match_distance_arcsec": 0.03,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:03.148955+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "availability_summary": {
+          "gaia_astrometry": true,
+          "sdss_spectroscopy": false,
+          "wise_photometry": true,
+          "tess_light_curve": false,
+          "exoplanet_archive": false
+        },
+        "latency_ms": 8686.51
+      }
+    },
+    {
+      "target_id": "GALAXY-ZOO-261146",
+      "ra": 233.03894,
+      "dec": 23.283297,
+      "category": "GALAXY",
+      "gaia_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 1751.16,
+        "source_id": "1220812499332191616",
+        "match_distance_arcsec": 11.53,
+        "parallax_mas": 4.7963,
+        "pmra_mas_yr": -16.14,
+        "pmdec_mas_yr": -11.989,
+        "g_magnitude": 18.573122,
+        "bp_rp_color": 2.845635
+      },
+      "sdss_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 500: InternalServerError",
+        "latency_ms": 2242.36
+      },
+      "wise_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 1849.74,
+        "source_id": "J153209.34+231659.4",
+        "match_distance_arcsec": 0.37,
+        "w1_mag": 13.922,
+        "w2_mag": 13.743,
+        "w3_mag": 10.382,
+        "w4_mag": 8.42,
+        "w1_minus_w2": 0.179
+      },
+      "tess_result": {
+        "status": "UNAVAILABLE",
+        "error": "<urlopen error [Errno 61] Connection refused>",
+        "latency_ms": 55.79
+      },
+      "exoplanet_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 3442.72
+      },
+      "evidence_bundle": {
+        "target_coordinates": {
+          "ra": 233.03894,
+          "dec": 23.283297
+        },
+        "catalog_matches": [
+          {
+            "catalog_name": "Gaia DR3",
+            "source_id": "1220812499332191616",
+            "ra": 233.03894,
+            "dec": 23.283297,
+            "match_distance_arcsec": 11.53,
+            "quality_flag": null
+          },
+          {
+            "catalog_name": "ALLWISE",
+            "source_id": "J153209.34+231659.4",
+            "ra": 233.03894,
+            "dec": 23.283297,
+            "match_distance_arcsec": 0.37,
+            "quality_flag": null
+          }
+        ],
+        "astrometry": {
+          "available": true,
+          "source": "Gaia DR3",
+          "source_id": "1220812499332191616",
+          "parallax_mas": 4.7963,
+          "proper_motion_ra_mas_yr": -16.14,
+          "proper_motion_dec_mas_yr": -11.989,
+          "g_magnitude": 18.573122,
+          "bp_rp_color": 2.845635,
+          "match_distance_arcsec": 11.53,
+          "quality_indicators": {},
+          "stellar_evidence_score": null
+        },
+        "spectroscopy": {
+          "available": false,
+          "source": "SDSS DR16",
+          "source_id": null,
+          "redshift": null,
+          "spectral_class": null,
+          "is_quasar_catalog_member": false,
+          "broad_emission_lines_detected": false,
+          "match_distance_arcsec": null,
+          "quasar_evidence_score": null
+        },
+        "photometry": {
+          "available": true,
+          "source": "ALLWISE",
+          "source_id": "J153209.34+231659.4",
+          "wise_w1": 13.922,
+          "wise_w2": 13.743,
+          "wise_w3": 10.382,
+          "wise_w4": 8.42,
+          "w1_minus_w2": 0.179,
+          "quality_flags": null,
+          "match_distance_arcsec": 0.37
+        },
+        "time_series": {
+          "available": false,
+          "mission": "TESS",
+          "sector": null,
+          "time": [],
+          "flux": [],
+          "quality": [],
+          "source_id": null,
+          "status": "NO_LIGHT_CURVE_AVAILABLE",
+          "signal_hint": "INSUFFICIENT_DATA"
+        },
+        "exoplanet": {
+          "available": false,
+          "known_host": false,
+          "known_planet": false,
+          "candidate": false,
+          "planet_name": null,
+          "orbital_period_days": null,
+          "transit_depth_ppm": null,
+          "catalog_identifiers": {},
+          "match_distance_arcsec": null
+        },
+        "nebula": {
+          "available": false,
+          "is_catalog_nebula": false,
+          "catalog_name": null,
+          "nebula_type": null,
+          "h_alpha_emission_detected": false,
+          "match_distance_arcsec": null
+        },
+        "provenance_items": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": 4.7963,
+            "unit": "mas",
+            "match_distance_arcsec": 11.53,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:12.491882+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.179,
+            "unit": null,
+            "match_distance_arcsec": 0.37,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:12.491941+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "availability_summary": {
+          "gaia_astrometry": true,
+          "sdss_spectroscopy": false,
+          "wise_photometry": true,
+          "tess_light_curve": false,
+          "exoplanet_archive": false
+        },
+        "latency_ms": 9341.77
+      }
+    },
+    {
+      "target_id": "GALAXY-ZOO-66345",
+      "ra": 246.6076,
+      "dec": 34.280483,
+      "category": "GALAXY",
+      "gaia_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 1831.27,
+        "source_id": "1326114690725640320",
+        "match_distance_arcsec": 0.06,
+        "parallax_mas": null,
+        "pmra_mas_yr": null,
+        "pmdec_mas_yr": null,
+        "g_magnitude": 21.404272,
+        "bp_rp_color": 1.489229
+      },
+      "sdss_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 500: InternalServerError",
+        "latency_ms": 2239.97
+      },
+      "wise_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 1044.29,
+        "source_id": "J162625.82+341648.3",
+        "match_distance_arcsec": 1.36,
+        "w1_mag": 13.658,
+        "w2_mag": 13.404,
+        "w3_mag": 9.825,
+        "w4_mag": 8.091,
+        "w1_minus_w2": 0.254
+      },
+      "tess_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 400: 400",
+        "latency_ms": 1029.39
+      },
+      "exoplanet_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 2966.58
+      },
+      "evidence_bundle": {
+        "target_coordinates": {
+          "ra": 246.6076,
+          "dec": 34.280483
+        },
+        "catalog_matches": [
+          {
+            "catalog_name": "Gaia DR3",
+            "source_id": "1326114690725640320",
+            "ra": 246.6076,
+            "dec": 34.280483,
+            "match_distance_arcsec": 0.06,
+            "quality_flag": null
+          },
+          {
+            "catalog_name": "ALLWISE",
+            "source_id": "J162625.82+341648.3",
+            "ra": 246.6076,
+            "dec": 34.280483,
+            "match_distance_arcsec": 1.36,
+            "quality_flag": null
+          }
+        ],
+        "astrometry": {
+          "available": true,
+          "source": "Gaia DR3",
+          "source_id": "1326114690725640320",
+          "parallax_mas": null,
+          "proper_motion_ra_mas_yr": null,
+          "proper_motion_dec_mas_yr": null,
+          "g_magnitude": 21.404272,
+          "bp_rp_color": 1.489229,
+          "match_distance_arcsec": 0.06,
+          "quality_indicators": {},
+          "stellar_evidence_score": null
+        },
+        "spectroscopy": {
+          "available": false,
+          "source": "SDSS DR16",
+          "source_id": null,
+          "redshift": null,
+          "spectral_class": null,
+          "is_quasar_catalog_member": false,
+          "broad_emission_lines_detected": false,
+          "match_distance_arcsec": null,
+          "quasar_evidence_score": null
+        },
+        "photometry": {
+          "available": true,
+          "source": "ALLWISE",
+          "source_id": "J162625.82+341648.3",
+          "wise_w1": 13.658,
+          "wise_w2": 13.404,
+          "wise_w3": 9.825,
+          "wise_w4": 8.091,
+          "w1_minus_w2": 0.254,
+          "quality_flags": null,
+          "match_distance_arcsec": 1.36
+        },
+        "time_series": {
+          "available": false,
+          "mission": "TESS",
+          "sector": null,
+          "time": [],
+          "flux": [],
+          "quality": [],
+          "source_id": null,
+          "status": "NO_LIGHT_CURVE_AVAILABLE",
+          "signal_hint": "INSUFFICIENT_DATA"
+        },
+        "exoplanet": {
+          "available": false,
+          "known_host": false,
+          "known_planet": false,
+          "candidate": false,
+          "planet_name": null,
+          "orbital_period_days": null,
+          "transit_depth_ppm": null,
+          "catalog_identifiers": {},
+          "match_distance_arcsec": null
+        },
+        "nebula": {
+          "available": false,
+          "is_catalog_nebula": false,
+          "catalog_name": null,
+          "nebula_type": null,
+          "h_alpha_emission_detected": false,
+          "match_distance_arcsec": null
+        },
+        "provenance_items": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 0.06,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:21.604702+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.254,
+            "unit": null,
+            "match_distance_arcsec": 1.36,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:21.604742+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "availability_summary": {
+          "gaia_astrometry": true,
+          "sdss_spectroscopy": false,
+          "wise_photometry": true,
+          "tess_light_curve": false,
+          "exoplanet_archive": false
+        },
+        "latency_ms": 9111.5
+      }
+    },
+    {
+      "target_id": "STELLAR-CANDIDATE-587738067813924971",
+      "ra": 149.08499,
+      "dec": 69.7001,
+      "category": "STAR_CANDIDATE",
+      "gaia_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 940.79,
+        "source_id": "1070573856125478016",
+        "match_distance_arcsec": 11.9,
+        "parallax_mas": null,
+        "pmra_mas_yr": null,
+        "pmdec_mas_yr": null,
+        "g_magnitude": 21.336683,
+        "bp_rp_color": 1.306973
+      },
+      "sdss_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 500: InternalServerError",
+        "latency_ms": 1239.81
+      },
+      "wise_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 1213.72
+      },
+      "tess_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 400: 400",
+        "latency_ms": 2110.96
+      },
+      "exoplanet_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 2985.48
+      },
+      "evidence_bundle": {
+        "target_coordinates": {
+          "ra": 149.08499,
+          "dec": 69.7001
+        },
+        "catalog_matches": [
+          {
+            "catalog_name": "Gaia DR3",
+            "source_id": "1070573856125478016",
+            "ra": 149.08499,
+            "dec": 69.7001,
+            "match_distance_arcsec": 11.9,
+            "quality_flag": null
+          }
+        ],
+        "astrometry": {
+          "available": true,
+          "source": "Gaia DR3",
+          "source_id": "1070573856125478016",
+          "parallax_mas": null,
+          "proper_motion_ra_mas_yr": null,
+          "proper_motion_dec_mas_yr": null,
+          "g_magnitude": 21.336683,
+          "bp_rp_color": 1.306973,
+          "match_distance_arcsec": 11.9,
+          "quality_indicators": {},
+          "stellar_evidence_score": null
+        },
+        "spectroscopy": {
+          "available": false,
+          "source": "SDSS DR16",
+          "source_id": null,
+          "redshift": null,
+          "spectral_class": null,
+          "is_quasar_catalog_member": false,
+          "broad_emission_lines_detected": false,
+          "match_distance_arcsec": null,
+          "quasar_evidence_score": null
+        },
+        "photometry": {
+          "available": false,
+          "source": "ALLWISE",
+          "source_id": null,
+          "wise_w1": null,
+          "wise_w2": null,
+          "wise_w3": null,
+          "wise_w4": null,
+          "w1_minus_w2": null,
+          "quality_flags": null,
+          "match_distance_arcsec": null
+        },
+        "time_series": {
+          "available": false,
+          "mission": "TESS",
+          "sector": null,
+          "time": [],
+          "flux": [],
+          "quality": [],
+          "source_id": null,
+          "status": "NO_LIGHT_CURVE_AVAILABLE",
+          "signal_hint": "INSUFFICIENT_DATA"
+        },
+        "exoplanet": {
+          "available": false,
+          "known_host": false,
+          "known_planet": false,
+          "candidate": false,
+          "planet_name": null,
+          "orbital_period_days": null,
+          "transit_depth_ppm": null,
+          "catalog_identifiers": {},
+          "match_distance_arcsec": null
+        },
+        "nebula": {
+          "available": false,
+          "is_catalog_nebula": false,
+          "catalog_name": null,
+          "nebula_type": null,
+          "h_alpha_emission_detected": false,
+          "match_distance_arcsec": null
+        },
+        "provenance_items": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 11.9,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:30.096584+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "availability_summary": {
+          "gaia_astrometry": true,
+          "sdss_spectroscopy": false,
+          "wise_photometry": false,
+          "tess_light_curve": false,
+          "exoplanet_archive": false
+        },
+        "latency_ms": 8490.76
+      }
+    },
+    {
+      "target_id": "STELLAR-CANDIDATE-588017703470628953",
+      "ra": 187.69814,
+      "dec": 12.388354,
+      "category": "STAR_CANDIDATE",
+      "gaia_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 2090.55,
+        "source_id": "3907709443748318976",
+        "match_distance_arcsec": 16.14,
+        "parallax_mas": null,
+        "pmra_mas_yr": null,
+        "pmdec_mas_yr": null,
+        "g_magnitude": 20.265917,
+        "bp_rp_color": 1.369555
+      },
+      "sdss_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 500: InternalServerError",
+        "latency_ms": 1812.52
+      },
+      "wise_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 1110.96
+      },
+      "tess_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 400: 400",
+        "latency_ms": 1199.49
+      },
+      "exoplanet_result": {
+        "status": "UNAVAILABLE",
+        "error": "The read operation timed out",
+        "latency_ms": 5002.27
+      },
+      "evidence_bundle": {
+        "target_coordinates": {
+          "ra": 187.69814,
+          "dec": 12.388354
+        },
+        "catalog_matches": [
+          {
+            "catalog_name": "Gaia DR3",
+            "source_id": "3907709443748318976",
+            "ra": 187.69814,
+            "dec": 12.388354,
+            "match_distance_arcsec": 16.14,
+            "quality_flag": null
+          }
+        ],
+        "astrometry": {
+          "available": true,
+          "source": "Gaia DR3",
+          "source_id": "3907709443748318976",
+          "parallax_mas": null,
+          "proper_motion_ra_mas_yr": null,
+          "proper_motion_dec_mas_yr": null,
+          "g_magnitude": 20.265917,
+          "bp_rp_color": 1.369555,
+          "match_distance_arcsec": 16.14,
+          "quality_indicators": {},
+          "stellar_evidence_score": null
+        },
+        "spectroscopy": {
+          "available": false,
+          "source": "SDSS DR16",
+          "source_id": null,
+          "redshift": null,
+          "spectral_class": null,
+          "is_quasar_catalog_member": false,
+          "broad_emission_lines_detected": false,
+          "match_distance_arcsec": null,
+          "quasar_evidence_score": null
+        },
+        "photometry": {
+          "available": false,
+          "source": "ALLWISE",
+          "source_id": null,
+          "wise_w1": null,
+          "wise_w2": null,
+          "wise_w3": null,
+          "wise_w4": null,
+          "w1_minus_w2": null,
+          "quality_flags": null,
+          "match_distance_arcsec": null
+        },
+        "time_series": {
+          "available": false,
+          "mission": "TESS",
+          "sector": null,
+          "time": [],
+          "flux": [],
+          "quality": [],
+          "source_id": null,
+          "status": "NO_LIGHT_CURVE_AVAILABLE",
+          "signal_hint": "INSUFFICIENT_DATA"
+        },
+        "exoplanet": {
+          "available": false,
+          "known_host": false,
+          "known_planet": false,
+          "candidate": false,
+          "planet_name": null,
+          "orbital_period_days": null,
+          "transit_depth_ppm": null,
+          "catalog_identifiers": {},
+          "match_distance_arcsec": null
+        },
+        "nebula": {
+          "available": false,
+          "is_catalog_nebula": false,
+          "catalog_name": null,
+          "nebula_type": null,
+          "h_alpha_emission_detected": false,
+          "match_distance_arcsec": null
+        },
+        "provenance_items": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 16.14,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:41.313417+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "availability_summary": {
+          "gaia_astrometry": true,
+          "sdss_spectroscopy": false,
+          "wise_photometry": false,
+          "tess_light_curve": false,
+          "exoplanet_archive": false
+        },
+        "latency_ms": 11215.79
+      }
+    },
+    {
+      "target_id": "STELLAR-CANDIDATE-588017726012129401",
+      "ra": 187.43544,
+      "dec": 8.008245,
+      "category": "STAR_CANDIDATE",
+      "gaia_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 1219.12,
+        "source_id": "3901171369651891200",
+        "match_distance_arcsec": 0.06,
+        "parallax_mas": null,
+        "pmra_mas_yr": null,
+        "pmdec_mas_yr": null,
+        "g_magnitude": 20.88112,
+        "bp_rp_color": 1.307898
+      },
+      "sdss_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 500: InternalServerError",
+        "latency_ms": 1878.51
+      },
+      "wise_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 1443.08,
+        "source_id": "J122943.34+080033.3",
+        "match_distance_arcsec": 17.58,
+        "w1_mag": 12.556,
+        "w2_mag": 12.748,
+        "w3_mag": 11.954,
+        "w4_mag": 8.963,
+        "w1_minus_w2": -0.192
+      },
+      "tess_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 400: 400",
+        "latency_ms": 978.36
+      },
+      "exoplanet_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 2850.41
+      },
+      "evidence_bundle": {
+        "target_coordinates": {
+          "ra": 187.43544,
+          "dec": 8.008245
+        },
+        "catalog_matches": [
+          {
+            "catalog_name": "Gaia DR3",
+            "source_id": "3901171369651891200",
+            "ra": 187.43544,
+            "dec": 8.008245,
+            "match_distance_arcsec": 0.06,
+            "quality_flag": null
+          },
+          {
+            "catalog_name": "ALLWISE",
+            "source_id": "J122943.34+080033.3",
+            "ra": 187.43544,
+            "dec": 8.008245,
+            "match_distance_arcsec": 17.58,
+            "quality_flag": null
+          }
+        ],
+        "astrometry": {
+          "available": true,
+          "source": "Gaia DR3",
+          "source_id": "3901171369651891200",
+          "parallax_mas": null,
+          "proper_motion_ra_mas_yr": null,
+          "proper_motion_dec_mas_yr": null,
+          "g_magnitude": 20.88112,
+          "bp_rp_color": 1.307898,
+          "match_distance_arcsec": 0.06,
+          "quality_indicators": {},
+          "stellar_evidence_score": null
+        },
+        "spectroscopy": {
+          "available": false,
+          "source": "SDSS DR16",
+          "source_id": null,
+          "redshift": null,
+          "spectral_class": null,
+          "is_quasar_catalog_member": false,
+          "broad_emission_lines_detected": false,
+          "match_distance_arcsec": null,
+          "quasar_evidence_score": null
+        },
+        "photometry": {
+          "available": true,
+          "source": "ALLWISE",
+          "source_id": "J122943.34+080033.3",
+          "wise_w1": 12.556,
+          "wise_w2": 12.748,
+          "wise_w3": 11.954,
+          "wise_w4": 8.963,
+          "w1_minus_w2": -0.192,
+          "quality_flags": null,
+          "match_distance_arcsec": 17.58
+        },
+        "time_series": {
+          "available": false,
+          "mission": "TESS",
+          "sector": null,
+          "time": [],
+          "flux": [],
+          "quality": [],
+          "source_id": null,
+          "status": "NO_LIGHT_CURVE_AVAILABLE",
+          "signal_hint": "INSUFFICIENT_DATA"
+        },
+        "exoplanet": {
+          "available": false,
+          "known_host": false,
+          "known_planet": false,
+          "candidate": false,
+          "planet_name": null,
+          "orbital_period_days": null,
+          "transit_depth_ppm": null,
+          "catalog_identifiers": {},
+          "match_distance_arcsec": null
+        },
+        "nebula": {
+          "available": false,
+          "is_catalog_nebula": false,
+          "catalog_name": null,
+          "nebula_type": null,
+          "h_alpha_emission_detected": false,
+          "match_distance_arcsec": null
+        },
+        "provenance_items": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 0.06,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:49.684434+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": -0.192,
+            "unit": null,
+            "match_distance_arcsec": 17.58,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:49.684473+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "availability_summary": {
+          "gaia_astrometry": true,
+          "sdss_spectroscopy": false,
+          "wise_photometry": true,
+          "tess_light_curve": false,
+          "exoplanet_archive": false
+        },
+        "latency_ms": 8369.48
+      }
+    },
+    {
+      "target_id": "SURVEY-TARGET-227418",
+      "ra": 144.80423,
+      "dec": 32.682613,
+      "category": "DIVERSE_SURVEY_TARGET",
+      "gaia_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 948.2,
+        "source_id": "793899076598156288",
+        "match_distance_arcsec": 15.88,
+        "parallax_mas": 0.0429,
+        "pmra_mas_yr": 3.337,
+        "pmdec_mas_yr": 4.073,
+        "g_magnitude": 20.600082,
+        "bp_rp_color": 2.446924
+      },
+      "sdss_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 500: InternalServerError",
+        "latency_ms": 2595.22
+      },
+      "wise_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 2065.95,
+        "source_id": "J093912.95+324041.6",
+        "match_distance_arcsec": 15.74,
+        "w1_mag": 16.063,
+        "w2_mag": 16.345,
+        "w3_mag": 12.148,
+        "w4_mag": 8.753,
+        "w1_minus_w2": -0.282
+      },
+      "tess_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 400: 400",
+        "latency_ms": 1148.54
+      },
+      "exoplanet_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 2518.71
+      },
+      "evidence_bundle": {
+        "target_coordinates": {
+          "ra": 144.80423,
+          "dec": 32.682613
+        },
+        "catalog_matches": [
+          {
+            "catalog_name": "Gaia DR3",
+            "source_id": "793899076598156288",
+            "ra": 144.80423,
+            "dec": 32.682613,
+            "match_distance_arcsec": 15.88,
+            "quality_flag": null
+          },
+          {
+            "catalog_name": "ALLWISE",
+            "source_id": "J093912.95+324041.6",
+            "ra": 144.80423,
+            "dec": 32.682613,
+            "match_distance_arcsec": 15.74,
+            "quality_flag": null
+          }
+        ],
+        "astrometry": {
+          "available": true,
+          "source": "Gaia DR3",
+          "source_id": "793899076598156288",
+          "parallax_mas": 0.0429,
+          "proper_motion_ra_mas_yr": 3.337,
+          "proper_motion_dec_mas_yr": 4.073,
+          "g_magnitude": 20.600082,
+          "bp_rp_color": 2.446924,
+          "match_distance_arcsec": 15.88,
+          "quality_indicators": {},
+          "stellar_evidence_score": null
+        },
+        "spectroscopy": {
+          "available": false,
+          "source": "SDSS DR16",
+          "source_id": null,
+          "redshift": null,
+          "spectral_class": null,
+          "is_quasar_catalog_member": false,
+          "broad_emission_lines_detected": false,
+          "match_distance_arcsec": null,
+          "quasar_evidence_score": null
+        },
+        "photometry": {
+          "available": true,
+          "source": "ALLWISE",
+          "source_id": "J093912.95+324041.6",
+          "wise_w1": 16.063,
+          "wise_w2": 16.345,
+          "wise_w3": 12.148,
+          "wise_w4": 8.753,
+          "w1_minus_w2": -0.282,
+          "quality_flags": null,
+          "match_distance_arcsec": 15.74
+        },
+        "time_series": {
+          "available": false,
+          "mission": "TESS",
+          "sector": null,
+          "time": [],
+          "flux": [],
+          "quality": [],
+          "source_id": null,
+          "status": "NO_LIGHT_CURVE_AVAILABLE",
+          "signal_hint": "INSUFFICIENT_DATA"
+        },
+        "exoplanet": {
+          "available": false,
+          "known_host": false,
+          "known_planet": false,
+          "candidate": false,
+          "planet_name": null,
+          "orbital_period_days": null,
+          "transit_depth_ppm": null,
+          "catalog_identifiers": {},
+          "match_distance_arcsec": null
+        },
+        "nebula": {
+          "available": false,
+          "is_catalog_nebula": false,
+          "catalog_name": null,
+          "nebula_type": null,
+          "h_alpha_emission_detected": false,
+          "match_distance_arcsec": null
+        },
+        "provenance_items": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": 0.0429,
+            "unit": "mas",
+            "match_distance_arcsec": 15.88,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:58.962463+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": -0.282,
+            "unit": null,
+            "match_distance_arcsec": 15.74,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:14:58.962524+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "availability_summary": {
+          "gaia_astrometry": true,
+          "sdss_spectroscopy": false,
+          "wise_photometry": true,
+          "tess_light_curve": false,
+          "exoplanet_archive": false
+        },
+        "latency_ms": 9276.62
+      }
+    },
+    {
+      "target_id": "SURVEY-TARGET-59289",
+      "ra": 173.30031,
+      "dec": 6.424842,
+      "category": "DIVERSE_SURVEY_TARGET",
+      "gaia_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 2068.09,
+        "source_id": "3910290650373741824",
+        "match_distance_arcsec": 0.07,
+        "parallax_mas": null,
+        "pmra_mas_yr": null,
+        "pmdec_mas_yr": null,
+        "g_magnitude": 19.738285,
+        "bp_rp_color": 1.461664
+      },
+      "sdss_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 500: InternalServerError",
+        "latency_ms": 1230.07
+      },
+      "wise_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 2904.78,
+        "source_id": "J113311.22+062517.9",
+        "match_distance_arcsec": 17.14,
+        "w1_mag": 16.519,
+        "w2_mag": 16.3,
+        "w3_mag": 12.64,
+        "w4_mag": 9.039,
+        "w1_minus_w2": 0.219
+      },
+      "tess_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 400: 400",
+        "latency_ms": 1141.57
+      },
+      "exoplanet_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 3390.94
+      },
+      "evidence_bundle": {
+        "target_coordinates": {
+          "ra": 173.30031,
+          "dec": 6.424842
+        },
+        "catalog_matches": [
+          {
+            "catalog_name": "Gaia DR3",
+            "source_id": "3910290650373741824",
+            "ra": 173.30031,
+            "dec": 6.424842,
+            "match_distance_arcsec": 0.07,
+            "quality_flag": null
+          },
+          {
+            "catalog_name": "ALLWISE",
+            "source_id": "J113311.22+062517.9",
+            "ra": 173.30031,
+            "dec": 6.424842,
+            "match_distance_arcsec": 17.14,
+            "quality_flag": null
+          }
+        ],
+        "astrometry": {
+          "available": true,
+          "source": "Gaia DR3",
+          "source_id": "3910290650373741824",
+          "parallax_mas": null,
+          "proper_motion_ra_mas_yr": null,
+          "proper_motion_dec_mas_yr": null,
+          "g_magnitude": 19.738285,
+          "bp_rp_color": 1.461664,
+          "match_distance_arcsec": 0.07,
+          "quality_indicators": {},
+          "stellar_evidence_score": null
+        },
+        "spectroscopy": {
+          "available": false,
+          "source": "SDSS DR16",
+          "source_id": null,
+          "redshift": null,
+          "spectral_class": null,
+          "is_quasar_catalog_member": false,
+          "broad_emission_lines_detected": false,
+          "match_distance_arcsec": null,
+          "quasar_evidence_score": null
+        },
+        "photometry": {
+          "available": true,
+          "source": "ALLWISE",
+          "source_id": "J113311.22+062517.9",
+          "wise_w1": 16.519,
+          "wise_w2": 16.3,
+          "wise_w3": 12.64,
+          "wise_w4": 9.039,
+          "w1_minus_w2": 0.219,
+          "quality_flags": null,
+          "match_distance_arcsec": 17.14
+        },
+        "time_series": {
+          "available": false,
+          "mission": "TESS",
+          "sector": null,
+          "time": [],
+          "flux": [],
+          "quality": [],
+          "source_id": null,
+          "status": "NO_LIGHT_CURVE_AVAILABLE",
+          "signal_hint": "INSUFFICIENT_DATA"
+        },
+        "exoplanet": {
+          "available": false,
+          "known_host": false,
+          "known_planet": false,
+          "candidate": false,
+          "planet_name": null,
+          "orbital_period_days": null,
+          "transit_depth_ppm": null,
+          "catalog_identifiers": {},
+          "match_distance_arcsec": null
+        },
+        "nebula": {
+          "available": false,
+          "is_catalog_nebula": false,
+          "catalog_name": null,
+          "nebula_type": null,
+          "h_alpha_emission_detected": false,
+          "match_distance_arcsec": null
+        },
+        "provenance_items": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": null,
+            "unit": "mas",
+            "match_distance_arcsec": 0.07,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:15:09.699511+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.219,
+            "unit": null,
+            "match_distance_arcsec": 17.14,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:15:09.699567+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "availability_summary": {
+          "gaia_astrometry": true,
+          "sdss_spectroscopy": false,
+          "wise_photometry": true,
+          "tess_light_curve": false,
+          "exoplanet_archive": false
+        },
+        "latency_ms": 10735.45
+      }
+    },
+    {
+      "target_id": "SURVEY-TARGET-7212",
+      "ra": 128.3999,
+      "dec": 50.648518,
+      "category": "DIVERSE_SURVEY_TARGET",
+      "gaia_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 2405.68,
+        "source_id": "1027304397078210048",
+        "match_distance_arcsec": 15.42,
+        "parallax_mas": 0.5569,
+        "pmra_mas_yr": 0.579,
+        "pmdec_mas_yr": -0.654,
+        "g_magnitude": 19.508257,
+        "bp_rp_color": 0.61075
+      },
+      "sdss_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 500: InternalServerError",
+        "latency_ms": 2334.97
+      },
+      "wise_result": {
+        "status": "MATCH_FOUND",
+        "latency_ms": 1011.41,
+        "source_id": "J083335.97+503854.7",
+        "match_distance_arcsec": 0.04,
+        "w1_mag": 13.567,
+        "w2_mag": 13.396,
+        "w3_mag": 12.165,
+        "w4_mag": 8.632,
+        "w1_minus_w2": 0.171
+      },
+      "tess_result": {
+        "status": "UNAVAILABLE",
+        "error": "HTTP Error 400: 400",
+        "latency_ms": 1181.04
+      },
+      "exoplanet_result": {
+        "status": "NO_MATCH",
+        "latency_ms": 2911.02
+      },
+      "evidence_bundle": {
+        "target_coordinates": {
+          "ra": 128.3999,
+          "dec": 50.648518
+        },
+        "catalog_matches": [
+          {
+            "catalog_name": "Gaia DR3",
+            "source_id": "1027304397078210048",
+            "ra": 128.3999,
+            "dec": 50.648518,
+            "match_distance_arcsec": 15.42,
+            "quality_flag": null
+          },
+          {
+            "catalog_name": "ALLWISE",
+            "source_id": "J083335.97+503854.7",
+            "ra": 128.3999,
+            "dec": 50.648518,
+            "match_distance_arcsec": 0.04,
+            "quality_flag": null
+          }
+        ],
+        "astrometry": {
+          "available": true,
+          "source": "Gaia DR3",
+          "source_id": "1027304397078210048",
+          "parallax_mas": 0.5569,
+          "proper_motion_ra_mas_yr": 0.579,
+          "proper_motion_dec_mas_yr": -0.654,
+          "g_magnitude": 19.508257,
+          "bp_rp_color": 0.61075,
+          "match_distance_arcsec": 15.42,
+          "quality_indicators": {},
+          "stellar_evidence_score": null
+        },
+        "spectroscopy": {
+          "available": false,
+          "source": "SDSS DR16",
+          "source_id": null,
+          "redshift": null,
+          "spectral_class": null,
+          "is_quasar_catalog_member": false,
+          "broad_emission_lines_detected": false,
+          "match_distance_arcsec": null,
+          "quasar_evidence_score": null
+        },
+        "photometry": {
+          "available": true,
+          "source": "ALLWISE",
+          "source_id": "J083335.97+503854.7",
+          "wise_w1": 13.567,
+          "wise_w2": 13.396,
+          "wise_w3": 12.165,
+          "wise_w4": 8.632,
+          "w1_minus_w2": 0.171,
+          "quality_flags": null,
+          "match_distance_arcsec": 0.04
+        },
+        "time_series": {
+          "available": false,
+          "mission": "TESS",
+          "sector": null,
+          "time": [],
+          "flux": [],
+          "quality": [],
+          "source_id": null,
+          "status": "NO_LIGHT_CURVE_AVAILABLE",
+          "signal_hint": "INSUFFICIENT_DATA"
+        },
+        "exoplanet": {
+          "available": false,
+          "known_host": false,
+          "known_planet": false,
+          "candidate": false,
+          "planet_name": null,
+          "orbital_period_days": null,
+          "transit_depth_ppm": null,
+          "catalog_identifiers": {},
+          "match_distance_arcsec": null
+        },
+        "nebula": {
+          "available": false,
+          "is_catalog_nebula": false,
+          "catalog_name": null,
+          "nebula_type": null,
+          "h_alpha_emission_detected": false,
+          "match_distance_arcsec": null
+        },
+        "provenance_items": [
+          {
+            "source": "Gaia DR3",
+            "field": "parallax",
+            "value": 0.5569,
+            "unit": "mas",
+            "match_distance_arcsec": 15.42,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:15:19.545229+00:00",
+            "quality_indicator": null
+          },
+          {
+            "source": "ALLWISE",
+            "field": "w1_minus_w2",
+            "value": 0.171,
+            "unit": null,
+            "match_distance_arcsec": 0.04,
+            "provenance": "external_catalog",
+            "timestamp": "2026-09-16T17:15:19.545279+00:00",
+            "quality_indicator": null
+          }
+        ],
+        "availability_summary": {
+          "gaia_astrometry": true,
+          "sdss_spectroscopy": false,
+          "wise_photometry": true,
+          "tess_light_curve": false,
+          "exoplanet_archive": false
+        },
+        "latency_ms": 9844.12
+      }
+    }
+  ]
+}

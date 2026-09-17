@@ -56,19 +56,19 @@ export const ObservationsPage: React.FC<ObservationsPageProps> = ({ onAnalyze })
   ).length;
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto font-sans-ui text-[#ECEAF2]">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#21133B] pb-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold font-mono text-white tracking-wider">
+            <h1 className="text-xl font-bold font-serif-display text-white tracking-wider uppercase">
               OBSERVATIONS
             </h1>
-            <span className="text-xs font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-              <Database className="w-3 h-3 text-emerald-400" /> CURATED MISSION ARCHIVE
+            <span className="text-xs font-mono-tech bg-[#0E241B] text-[#58BFA7] border border-[#58BFA7]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 font-bold">
+              <Database className="w-3 h-3 text-[#58BFA7]" /> CURATED MISSION ARCHIVE
             </span>
           </div>
-          <p className="text-xs text-slate-400 font-sans mt-1">
+          <p className="text-xs text-[#8E8A9D] font-sans-ui mt-1">
             Browse genuine Galaxy Zoo 2 astronomical observations and user-submitted analysis runs.
           </p>
         </div>
@@ -199,7 +199,7 @@ export const ObservationsPage: React.FC<ObservationsPageProps> = ({ onAnalyze })
 
                       {/* Confidence */}
                       <td className="py-3 px-4 text-emerald-400 font-semibold">
-                        {(obs.confidence * 100).toFixed(1)}%
+                        {obs.confidence != null ? `${(obs.confidence * 100).toFixed(1)}%` : 'N/A'}
                       </td>
 
                       {/* Triage / Anomaly Score */}
@@ -352,7 +352,7 @@ export const ObservationsPage: React.FC<ObservationsPageProps> = ({ onAnalyze })
                 score: explanationObs.anomaly_score,
                 priority: explanationObs.priority as PriorityLevel,
                 novelty_score: explanationObs.triage_response?.novelty_score ?? explanationObs.ood_score,
-                uncertainty_score: explanationObs.triage_response?.uncertainty_score ?? (1.0 - explanationObs.confidence) / 0.75,
+                uncertainty_score: explanationObs.triage_response?.uncertainty_score ?? (explanationObs.confidence != null ? (1.0 - explanationObs.confidence) / 0.75 : 0.5),
                 oddity_score: explanationObs.triage_response?.oddity_score ?? explanationObs.p_odd ?? explanationObs.triage_response?.scientific_attributes?.prob_odd,
                 raw_embedding_distance: explanationObs.triage_response?.raw_embedding_distance,
                 confidence: explanationObs.confidence,

@@ -9,18 +9,18 @@ interface ResearchModePageProps {
 
 export const ResearchModePage: React.FC<ResearchModePageProps> = ({ onInspectResult }) => {
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto font-sans-ui text-[#ECEAF2]">
       {/* Top Header */}
-      <div className="border-b border-slate-800 pb-6">
+      <div className="border-b border-[#21133B] pb-4">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold font-mono text-white tracking-wider">
+          <h1 className="text-xl font-bold font-serif-display text-white tracking-wider uppercase">
             RESEARCH & EXPERIMENTAL UPLOAD MODE
           </h1>
-          <span className="text-xs font-mono bg-[#151B23] text-[#D5DAE0] border border-[#252D37] px-2 py-0.5 rounded">
+          <span className="text-xs font-mono-tech bg-[#15102A] text-[#9B7FD4] border border-[#9B7FD4]/40 px-2 py-0.5 rounded font-bold">
             ASTRA LABS
           </span>
         </div>
-        <p className="text-xs text-slate-400 font-sans mt-1 max-w-2xl">
+        <p className="text-xs text-[#8E8A9D] font-sans-ui mt-1 max-w-2xl">
           Test custom observation cutouts against ASTRA's onboard domain validator, morphology feature extractor, and statistical OOD anomaly pipeline.
         </p>
       </div>

@@ -3,13 +3,16 @@ import type { Observation } from '../types';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { ConfidenceBar } from '../components/ConfidenceBar';
 import { TriageExplanation } from '../components/TriageExplanation';
+import { EvidenceEnrichmentPanel } from '../components/EvidenceEnrichmentPanel';
+
 import {
   getObservationReviewState,
   recordReviewEvent,
   REVIEW_EVENT_CUSTOM_TYPE,
   type ReviewState
 } from '../services/reviewEventsService';
-import { ArrowLeft, Database, CheckCircle2, AlertOctagon, UserCheck, Shield, FileSearch } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertOctagon, UserCheck, Shield, FileSearch } from 'lucide-react';
+
 
 interface ObservationDetailPageProps {
   observation: Observation;
@@ -50,14 +53,17 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ ob
     score: observation.anomaly_score,
     priority: observation.priority,
     novelty_score: triage?.novelty_score ?? observation.ood_score,
-    uncertainty_score: triage?.uncertainty_score ?? (1.0 - observation.confidence) / 0.75,
+    uncertainty_score: triage?.uncertainty_score ?? (observation.confidence != null ? (1.0 - observation.confidence) / 0.75 : 0.5),
     oddity_score: triage?.oddity_score ?? observation.p_odd ?? triage?.scientific_attributes?.prob_odd,
     raw_embedding_distance: triage?.raw_embedding_distance,
     confidence: observation.confidence,
     p_odd: observation.p_odd ?? triage?.scientific_attributes?.prob_odd,
     predicted_class: observation.gz2class,
     nearest_reference_class: triage?.nearest_reference_class || observation.broad_morphology,
-    model_version: triage?.model_version
+    model_version: triage?.model_version,
+    domain_status: triage?.domain_validation?.decision,
+    object_type: triage?.object_type || observation.object_type,
+    morphology: triage?.morphology
   };
 
   return (
@@ -86,7 +92,7 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ ob
       </div>
 
       {/* Main Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: High-Res Image Display & Probabilities */}
         <div className="lg:col-span-6 space-y-6">
           <div className="glass-panel p-4 rounded-xl border border-[#252D37] bg-[#070B11]/90 relative overflow-hidden">
@@ -120,27 +126,63 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ ob
             </div>
           </div>
 
-          {/* Model Morphology Probability Bars */}
-          <div className="glass-panel p-6 rounded-xl border border-slate-800 space-y-4">
-            <h3 className="text-sm font-mono font-bold text-white tracking-wider flex items-center justify-between">
-              <span>MODEL MORPHOLOGY PROBABILITIES</span>
-              <span className="text-xs font-normal text-emerald-400">MODEL CONFIDENCE: {(observation.confidence * 100).toFixed(1)}%</span>
-            </h3>
+          {/* Model Morphology Probability Bars or Object Identification Evidence */}
+          {(observation.object_type === 'Galaxy' || observation.object_type === 'GALAXY' || triage?.predicted_object_type === 'GALAXY') && observation.confidence != null && observation.confidence > 0 && observation.morphology_probs && observation.morphology_probs.length > 0 ? (
+            <div className="glass-panel p-6 rounded-xl border border-slate-800 space-y-4">
+              <h3 className="text-sm font-mono font-bold text-white tracking-wider flex items-center justify-between">
+                <span>MODEL MORPHOLOGY PROBABILITIES</span>
+                <span className="text-xs font-normal text-emerald-400">MODEL CONFIDENCE: {observation.confidence != null ? `${(observation.confidence * 100).toFixed(1)}%` : 'N/A'}</span>
+              </h3>
 
-            <div className="space-y-3 pt-2">
-              {observation.morphology_probs.map((prob) => (
-                <ConfidenceBar
-                  key={prob.label}
-                  label={prob.label}
-                  value={prob.probability}
-                  color={prob.probability > 0.7 ? 'silver' : prob.probability > 0.1 ? 'emerald' : 'amber'}
-                />
-              ))}
+              <div className="space-y-3 pt-2">
+                {observation.morphology_probs.map((prob) => {
+                  const pVal = prob.probability ?? 0;
+                  return (
+                    <ConfidenceBar
+                      key={prob.label}
+                      label={prob.label}
+                      value={pVal}
+                      color={pVal > 0.7 ? 'silver' : pVal > 0.1 ? 'emerald' : 'amber'}
+                    />
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="glass-panel p-6 rounded-xl border border-slate-800 space-y-4">
+              <h3 className="text-sm font-mono font-bold text-white tracking-wider flex items-center justify-between">
+                <span>OBJECT IDENTIFICATION EVIDENCE</span>
+                <span className="text-xs font-normal text-slate-400">STATUS: {triage?.object_type_status || 'EXPERIMENTAL_ZERO_SHOT'}</span>
+              </h3>
 
-          {/* Continuous Scientific Attributes (Real Model Prediction) */}
-          {triage?.scientific_attributes && (
+              <div className="space-y-3 font-mono text-xs">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-[#0D1219] p-3 rounded border border-[#252D37]">
+                    <span className="text-slate-400 block text-[10px] uppercase">Experimental Visual Score</span>
+                    <span className="text-cyan-300 font-bold text-sm">
+                      {triage?.visual_similarity_score !== undefined && triage?.visual_similarity_score !== null
+                        ? triage.visual_similarity_score.toFixed(2)
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="bg-[#0D1219] p-3 rounded border border-[#252D37]">
+                    <span className="text-slate-400 block text-[10px] uppercase">Decision Margin</span>
+                    <span className="text-emerald-300 font-bold text-sm">
+                      {triage?.object_margin !== undefined && triage?.object_margin !== null
+                        ? `+${triage.object_margin.toFixed(2)}`
+                        : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-3 bg-slate-900/80 rounded border border-slate-800 text-slate-300 text-[11px] leading-relaxed">
+                  Galaxy Zoo morphology specialist was not executed because this target was resolved as a non-galaxy observation ({triage?.predicted_object_type || observation.object_type || 'Point source'}).
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Continuous Scientific Attributes (Real Model Prediction for Galaxy Targets) */}
+          {(observation.object_type === 'Galaxy' || observation.object_type === 'GALAXY' || triage?.predicted_object_type === 'GALAXY') && triage?.scientific_attributes && (
             <div className="glass-panel p-6 rounded-xl border border-slate-800 space-y-4">
               <h3 className="text-sm font-mono font-bold text-white tracking-wider">
                 SCIENTIFIC ATTRIBUTE HEAD PREDICTIONS
@@ -175,24 +217,14 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ ob
             </div>
           )}
 
-          {/* Catalog Cross-Match Section */}
-          <div className="glass-panel p-6 rounded-xl border border-slate-800 space-y-3">
-            <h3 className="text-sm font-mono font-bold text-white tracking-wider flex items-center gap-2">
-              <Database className="w-4 h-4 text-indigo-400" />
-              CATALOG CROSS-MATCH & ALIGNMENT
-            </h3>
+          {/* Multi-Modal Evidence Enrichment Panel */}
+          <EvidenceEnrichmentPanel
+            observationId={observation.id}
+            initialObjectType={triage?.predicted_object_type || observation.object_type}
+            ra={observation.ra}
+            dec={observation.dec}
+          />
 
-            <div className="space-y-2 text-xs font-mono">
-              <div className="flex justify-between p-2.5 bg-slate-900/60 rounded border border-slate-800">
-                <span className="text-slate-400">Nearest Ref Centroid Class:</span>
-                <span className="text-[#8FAFC2]">{triage?.nearest_reference_class || observation.broad_morphology}</span>
-              </div>
-              <div className="flex justify-between p-2.5 bg-slate-900/60 rounded border border-slate-800">
-                <span className="text-slate-400">Catalog Entry:</span>
-                <span className="text-amber-400">{observation.catalog_name || 'Unregistered User Upload'}</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Right Column: Dynamic Triage Explanation & Human Review Controls */}

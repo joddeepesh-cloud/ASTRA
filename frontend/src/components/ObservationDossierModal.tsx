@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import type { Observation } from '../types';
 import { PriorityBadge } from './PriorityBadge';
-import { getAnomalyExplanation } from '../utils/anomalyExplanation';
+import { TriageExplanation } from './TriageExplanation';
+import { EvidenceEnrichmentPanel } from './EvidenceEnrichmentPanel';
+
 import { buildAskAstraContextPayload } from '../utils/observationContext';
 import {
-  FileText, X, Compass, Layers, AlertCircle, HelpCircle,
-  CheckCircle2, ChevronDown, ChevronUp, Bot, Sparkles, ArrowRight,
-  Activity, Eye
+  FileText, X, Layers,
+  Bot, Sparkles, ArrowRight, Eye,
+  Activity, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 interface ObservationDossierModalProps {
@@ -23,9 +25,6 @@ export const ObservationDossierModal: React.FC<ObservationDossierModalProps> = (
   onAnalyze
 }) => {
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
-
-  // Generate deterministic science explanation
-  const anomalyInfo = getAnomalyExplanation(observation);
   const aiContext = buildAskAstraContextPayload(observation);
 
   // Probability progress bars data
@@ -36,9 +35,29 @@ export const ObservationDossierModal: React.FC<ObservationDossierModalProps> = (
     { label: 'Spiral Arms', val: aiContext.probabilities.spiral, color: 'bg-[#D5DAE0]' },
   ];
 
+  const triageSignals = {
+    score: observation.anomaly_score,
+    priority: observation.priority,
+    novelty_score: observation.triage_response?.novelty_score ?? observation.ood_score,
+    uncertainty_score: observation.triage_response?.uncertainty_score ?? (observation.confidence != null ? (1.0 - observation.confidence) / 0.75 : 0.5),
+    oddity_score: observation.triage_response?.oddity_score ?? observation.p_odd ?? observation.triage_response?.scientific_attributes?.prob_odd,
+    raw_embedding_distance: observation.triage_response?.raw_embedding_distance,
+    confidence: observation.confidence,
+    p_odd: observation.p_odd ?? observation.triage_response?.scientific_attributes?.prob_odd,
+    predicted_class: observation.gz2class,
+    nearest_reference_class: observation.triage_response?.nearest_reference_class || observation.broad_morphology,
+    model_version: observation.triage_response?.model_version,
+    domain_status: observation.triage_response?.domain_validation?.decision,
+    object_type: observation.triage_response?.object_type || observation.object_type,
+    morphology: observation.triage_response?.morphology,
+    scientific_attributes: observation.triage_response?.scientific_attributes
+  };
+
+  const isGalaxyTarget = (observation.object_type === 'Galaxy' || observation.object_type === 'GALAXY' || observation.triage_response?.object_type === 'GALAXY' || observation.id.startsWith('LIB-'));
+
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto font-sans-ui selection:bg-[#C7CDD5]/30">
-      <div className="bg-[#070B11] border border-[#C7CDD5]/30 rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden relative text-[#F2F4F7] my-auto">
+      <div className="bg-[#070B11] border border-[#C7CDD5]/30 rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden relative text-[#F2F4F7] my-auto">
         
         {/* Header Bar */}
         <div className="p-4 sm:p-5 border-b border-[#252D37] flex items-center justify-between bg-[#0D1219] shrink-0 font-mono-tech">
@@ -87,7 +106,7 @@ export const ObservationDossierModal: React.FC<ObservationDossierModalProps> = (
             <div className="absolute top-3 left-3 flex items-center gap-2 font-mono-tech">
               <PriorityBadge priority={observation.priority} />
               <span className="text-[10px] bg-[#030508]/90 text-[#D5DAE0] border border-[#252D37] px-2 py-0.5 rounded backdrop-blur-sm">
-                {observation.broad_morphology}
+                {isGalaxyTarget ? observation.broad_morphology : 'UNRESOLVED SOURCE'}
               </span>
             </div>
 
@@ -104,75 +123,58 @@ export const ObservationDossierModal: React.FC<ObservationDossierModalProps> = (
             </div>
           </div>
 
-          {/* Section 2: What Are We Looking At? */}
-          <div className="glass-panel p-4 rounded-xl border border-[#252D37] space-y-2">
-            <h3 className="text-xs font-mono-tech font-bold text-[#D5DAE0] uppercase tracking-wider flex items-center gap-2">
-              <Compass className="w-4 h-4 text-[#8FAFC2]" /> WHAT ARE WE LOOKING AT?
-            </h3>
-            <p className="text-[#A8B0BA] leading-relaxed font-sans-ui text-xs">
-              {observation.explanation || `This observation is cataloged in the survey dataset under target morphology class '${observation.broad_morphology}'.`}
-            </p>
-          </div>
+          {/* Section 2: ANOMALY & INTELLIGENT INTERPRETATION */}
+          <TriageExplanation signals={triageSignals} />
 
-          {/* Section 3: ASTRA Morphology & Probability Breakdown */}
-          <div className="glass-panel p-4 rounded-xl border border-[#252D37] space-y-3 font-mono-tech">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-[#F2F4F7] uppercase tracking-wider flex items-center gap-2">
-                <Layers className="w-4 h-4 text-[#8FAFC2]" /> ASTRA MORPHOLOGY BREAKDOWN
-              </h3>
-              <span className="text-[11px] text-[#5FC7A1] font-bold bg-[#0E241B] border border-[#5FC7A1]/40 px-2 py-0.5 rounded">
-                Confidence: {(observation.confidence * 100).toFixed(1)}%
+          {/* Section 2B: MULTI-MODAL EVIDENCE ENRICHMENT & FUSION */}
+          <EvidenceEnrichmentPanel
+            observationId={observation.id}
+            initialObjectType={observation.triage_response?.predicted_object_type || observation.object_type}
+            ra={observation.ra}
+            dec={observation.dec}
+          />
+
+
+          {/* Section 3: ASTRA Morphology Breakdown */}
+          {isGalaxyTarget ? (
+            <div className="glass-panel p-4 rounded-xl border border-[#252D37] space-y-3 font-mono-tech">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-bold text-[#F2F4F7] uppercase tracking-wider flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-[#8FAFC2]" /> ASTRA MORPHOLOGY BREAKDOWN
+                </h3>
+                <span className="text-[11px] text-[#5FC7A1] font-bold bg-[#0E241B] border border-[#5FC7A1]/40 px-2 py-0.5 rounded">
+                  Confidence: {observation.confidence != null ? `${(observation.confidence * 100).toFixed(1)}%` : 'N/A'}
+                </span>
+              </div>
+
+              {/* 4-Class Probability Progress Bars */}
+              <div className="space-y-2.5 pt-1">
+                {probItems.map((item) => (
+                  <div key={item.label} className="space-y-1 text-[11px]">
+                    <div className="flex justify-between text-[#A8B0BA]">
+                      <span>{item.label}</span>
+                      <span className="text-white font-bold">{(item.val * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-[#030508] rounded-full h-1.5 overflow-hidden border border-[#252D37]">
+                      <div
+                        className={`h-1.5 rounded-full ${item.color}`}
+                        style={{ width: `${item.val * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="glass-panel p-4 rounded-xl border border-[#252D37] font-mono-tech text-xs flex justify-between items-center text-[#8E8A9D]">
+              <span className="flex items-center gap-2 font-bold text-slate-300 uppercase tracking-wider">
+                <Layers className="w-4 h-4 text-[#8FAFC2]" /> GALAXY MORPHOLOGY ANALYSIS
+              </span>
+              <span className="text-amber-400/90 font-semibold px-2.5 py-1 rounded bg-[#030508] border border-[#252D37]">
+                Not applicable (Unresolved astronomical source)
               </span>
             </div>
-
-            {/* 4-Class Probability Progress Bars */}
-            <div className="space-y-2.5 pt-1">
-              {probItems.map((item) => (
-                <div key={item.label} className="space-y-1 text-[11px]">
-                  <div className="flex justify-between text-[#A8B0BA]">
-                    <span>{item.label}</span>
-                    <span className="text-white font-bold">{(item.val * 100).toFixed(1)}%</span>
-                  </div>
-                  <div className="w-full bg-[#030508] rounded-full h-1.5 overflow-hidden border border-[#252D37]">
-                    <div
-                      className={`h-1.5 rounded-full ${item.color}`}
-                      style={{ width: `${item.val * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Section 4: Why Flagged by ASTRA */}
-          <div className="glass-panel p-4 rounded-xl border border-[#252D37] space-y-2">
-            <h3 className="text-xs font-mono-tech font-bold text-[#D6A84F] uppercase tracking-wider flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-[#D6A84F]" /> WHY ASTRA FLAGGED THIS TARGET
-            </h3>
-            <p className="text-[#A8B0BA] font-sans-ui text-xs leading-relaxed">
-              {anomalyInfo.whyFlagged}
-            </p>
-          </div>
-
-          {/* Section 5: Why High/Medium Priority */}
-          <div className="glass-panel p-4 rounded-xl border border-[#252D37] space-y-2">
-            <h3 className="text-xs font-mono-tech font-bold text-[#F2F4F7] uppercase tracking-wider flex items-center gap-2">
-              <HelpCircle className="w-4 h-4 text-[#8FAFC2]" /> TRIAGE PRIORITY REASONING
-            </h3>
-            <p className="text-[#A8B0BA] font-sans-ui text-xs leading-relaxed">
-              {anomalyInfo.whyPriority}
-            </p>
-          </div>
-
-          {/* Section 6: Recommended Next Steps */}
-          <div className="glass-panel p-4 rounded-xl border border-[#252D37] space-y-2">
-            <h3 className="text-xs font-mono-tech font-bold text-[#5FC7A1] uppercase tracking-wider flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#5FC7A1]" /> RECOMMENDED SCIENTIFIC ACTION
-            </h3>
-            <p className="text-[#A8B0BA] font-sans-ui text-xs leading-relaxed">
-              {anomalyInfo.recommendedSteps}
-            </p>
-          </div>
+          )}
 
           {/* Section 7: Collapsible Technical Raw Metadata */}
           <div className="border border-[#252D37] rounded-xl overflow-hidden font-mono-tech">

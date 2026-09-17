@@ -27,8 +27,41 @@ class HealthResponse(BaseModel):
     backend_version: str = Field(..., json_schema_extra={"example": "1.0.0"})
     startup_duration_ms: float = Field(..., json_schema_extra={"example": 191.21})
 
+class ObjectTypeInfo(BaseModel):
+    label: str = Field(..., json_schema_extra={"example": "GALAXY"})
+    confidence: Optional[float] = Field(default=None, json_schema_extra={"example": None})
+    status: str = Field(..., json_schema_extra={"example": "SUPERVISED_SPECIALIST_SUPPORTED"})
+    predicted_object_type: Optional[str] = Field(default=None, json_schema_extra={"example": "GALAXY"})
+    visual_similarity_score: Optional[float] = Field(default=None, json_schema_extra={"example": 0.8241})
+    object_margin: Optional[float] = Field(default=None, json_schema_extra={"example": 0.6521})
+    object_confidence: Optional[float] = Field(default=None, json_schema_extra={"example": None})
+    object_type_status: Optional[str] = Field(default=None, json_schema_extra={"example": "SUPERVISED_SPECIALIST_SUPPORTED"})
+    evidence_quality: Optional[str] = Field(default=None, json_schema_extra={"example": "STRONG"})
+    object_evidence_source: Optional[List[str]] = Field(default=None)
+    top_class: Optional[str] = Field(default=None, json_schema_extra={"example": "GALAXY"})
+    top_score: Optional[float] = Field(default=None, json_schema_extra={"example": 0.8241})
+    second_best_class: Optional[str] = Field(default=None, json_schema_extra={"example": "STAR"})
+    margin_between_top_and_second: Optional[float] = Field(default=None, json_schema_extra={"example": 0.6521})
+    evidence: Optional[List[str]] = Field(default=None)
+
+class MorphologyInfo(BaseModel):
+    label: Optional[str] = Field(default=None, json_schema_extra={"example": "FEATURED_DISK"})
+    confidence: Optional[float] = Field(default=None, json_schema_extra={"example": 0.7841})
+    status: str = Field(..., json_schema_extra={"example": "SUPPORTED"})
+
 class TriageResponse(BaseModel):
     domain_validation: DomainValidation
+    object_type_info: Optional[ObjectTypeInfo] = Field(default=None)
+    morphology_info: Optional[MorphologyInfo] = Field(default=None)
+    predicted_object_type: Optional[str] = Field(default=None, json_schema_extra={"example": "GALAXY"})
+    visual_similarity_score: Optional[float] = Field(default=None, json_schema_extra={"example": 0.8241})
+    object_margin: Optional[float] = Field(default=None, json_schema_extra={"example": 0.6521})
+    object_confidence: Optional[float] = Field(default=None, json_schema_extra={"example": None})
+    object_type_confidence: Optional[float] = Field(default=None, json_schema_extra={"example": None})
+    object_type_status: Optional[str] = Field(default=None, json_schema_extra={"example": "EXPERIMENTAL_ZERO_SHOT"})
+    user_selected_study_type: Optional[str] = Field(default=None, json_schema_extra={"example": None})
+    object_type: Optional[str] = Field(default=None, json_schema_extra={"example": "GALAXY"})
+    morphology: Optional[str] = Field(default=None, json_schema_extra={"example": "FEATURED_DISK"})
     predicted_class: Optional[str] = Field(default=None, json_schema_extra={"example": "FEATURED_DISK"})
     class_confidence: Optional[float] = Field(default=None, json_schema_extra={"example": 0.7841})
     class_probabilities: Optional[Dict[str, float]] = Field(default=None)
@@ -50,6 +83,28 @@ class TriageResponse(BaseModel):
         default="Experimental prioritization heuristic; not a calibrated anomaly probability.",
         json_schema_extra={"example": "Experimental prioritization heuristic; not a calibrated anomaly probability."}
     )
+    observation_id: Optional[str] = Field(default=None, json_schema_extra={"example": "OBS-8F92A10C"})
+    evidence_status: Optional[str] = Field(default="UNAVAILABLE", json_schema_extra={"example": "PENDING"})
+    ra: Optional[float] = Field(default=None, json_schema_extra={"example": 177.07516})
+    dec: Optional[float] = Field(default=None, json_schema_extra={"example": -3.11701})
+    fused_evidence: Optional[Dict[str, Any]] = Field(default=None)
+
+class EvidenceResponse(BaseModel):
+    observation_id: str = Field(..., json_schema_extra={"example": "OBS-8F92A10C"})
+    evidence_status: str = Field(..., json_schema_extra={"example": "COMPLETE"})  # PENDING | COMPLETE | UNAVAILABLE | ERROR
+    ra: Optional[float] = Field(default=None, json_schema_extra={"example": 177.07516})
+    dec: Optional[float] = Field(default=None, json_schema_extra={"example": -3.11701})
+    fused_object_type: Optional[str] = Field(default=None, json_schema_extra={"example": "GALAXY"})
+    evidence_level: Optional[str] = Field(default=None, json_schema_extra={"example": "MODERATE"})
+    match_quality: Optional[str] = Field(default=None, json_schema_extra={"example": "HIGH_QUALITY_MATCH"})
+    catalog_sources_queried: List[str] = Field(default_factory=lambda: ["Gaia DR3", "SDSS DR16", "ALLWISE", "TESS", "NASA Exoplanet Archive", "SIMBAD"])
+    contributing_catalogs: List[str] = Field(default_factory=list)
+    explanation: str = Field(..., json_schema_extra={"example": "Target identified as GALAXY..."})
+    provenance: List[str] = Field(default_factory=list)
+    conflicts: List[str] = Field(default_factory=list)
+    fused_result: Optional[Dict[str, Any]] = Field(default=None)
+    updated_at: Optional[str] = Field(default=None)
+
 
 class ErrorResponse(BaseModel):
     error: str = Field(..., json_schema_extra={"example": "invalid_image"})
