@@ -1,0 +1,24 @@
+[Unit]
+Description=ASTRA Always-Warm FastAPI ML Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/astra
+Environment="PATH=/opt/astra/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=/opt/astra"
+Environment="ASTRA_DEVICE=cpu"
+Environment="HF_HUB_OFFLINE=1"
+Environment="PORT=8000"
+Environment="HOST=0.0.0.0"
+Environment="ALLOWED_ORIGINS=https://astra.pages.dev,http://localhost:5173"
+Environment="FRONTEND_ORIGIN=https://astra.pages.dev"
+ExecStart=/opt/astra/venv/bin/gunicorn -c deploy/gunicorn.conf.py backend.app.main:app
+
+Restart=always
+RestartSec=5s
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
