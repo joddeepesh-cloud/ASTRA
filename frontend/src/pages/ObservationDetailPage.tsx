@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import type { Observation } from '../types';
 import { PriorityBadge } from '../components/PriorityBadge';
+import { ObservationImage } from '../components/ObservationImage';
 import { ConfidenceBar } from '../components/ConfidenceBar';
 import { TriageExplanation } from '../components/TriageExplanation';
 import { EvidenceEnrichmentPanel } from '../components/EvidenceEnrichmentPanel';
-
-import { useObservationImage } from '../hooks/useObservationImage';
 import {
   getObservationReviewState,
   recordReviewEvent,
@@ -32,7 +31,6 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({
     getObservationReviewState(observation.id)
   );
   const [showChoiceModal, setShowChoiceModal] = useState<boolean>(false);
-  const { imageUrl: resolvedImageUrl, isFallback } = useObservationImage(observation);
 
   useEffect(() => {
     // Sync review state whenever observation changes or custom review event triggers
@@ -80,8 +78,6 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({
     morphology: triage?.morphology
   };
 
-  const [imageError, setImageError] = useState(false);
-
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
       {/* Navigation Top Bar */}
@@ -113,20 +109,10 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({
         <div className="lg:col-span-6 space-y-6">
           <div className="glass-panel p-4 rounded-xl border border-[#252D37] bg-[#070B11]/90 relative overflow-hidden">
             <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-black border border-slate-800 flex items-center justify-center">
-              {resolvedImageUrl && !imageError && !isFallback ? (
-                <img
-                  src={resolvedImageUrl}
-                  alt={observation.id}
-                  className="w-full h-full object-cover"
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-slate-400 font-mono text-xs p-6 text-center space-y-3">
-                  <AlertOctagon className="w-10 h-10 text-amber-400/80" />
-                  <span className="font-semibold text-slate-300">Original image unavailable for this historical record</span>
-                  <span className="text-[11px] text-slate-500 max-w-xs">The image binary was not found in browser storage or may have expired.</span>
-                </div>
-              )}
+              <ObservationImage
+                observation={observation}
+                className="w-full h-full object-cover"
+              />
 
               {/* Overlaid Coordinate HUD */}
               <div className="absolute top-4 left-4 bg-[#070B11]/90 border border-[#4B5563]/50 p-2.5 rounded font-mono text-xs text-[#D5DAE0] space-y-1 backdrop-blur-md">

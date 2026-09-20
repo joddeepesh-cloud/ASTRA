@@ -271,5 +271,143 @@ def test_space_ai_multi_turn_conversation_sequence():
     assert res7["scope"] == "redirect"
     assert "astronomy" in res7["answer"].lower()
 
+# PART 12 REGRESSION TESTS
+
+# TEST 1 — STAR
+def test_space_ai_part12_test1_star():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "TEST-STAR-01",
+        "predicted_object_type": "STAR",
+        "broad_morphology": "SMOOTH",
+        "confidence": 0.94,
+        "coordinates": None,
+        "has_coordinates": False
+    }
+    res = service.answer_question("Explain this observation.", observation_context=ctx)
+    assert res["scope"] == "observation_analysis"
+    assert "STAR" in res["answer"]
+    assert "Not applicable" in res["answer"]
+    assert "0.000000" not in res["answer"]
+    assert "Sky coordinates are not available" in res["answer"]
+
+# TEST 2 — GALAXY
+def test_space_ai_part12_test2_galaxy():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "TEST-GAL-01",
+        "predicted_object_type": "GALAXY",
+        "broad_morphology": "SPIRAL",
+        "gz2class": "SBc",
+        "confidence": 0.88,
+        "coordinates": {"ra": 196.13354, "dec": -3.58839},
+        "has_coordinates": True
+    }
+    res = service.answer_question("Explain this observation.", observation_context=ctx)
+    assert res["scope"] == "observation_analysis"
+    assert "GALAXY" in res["answer"]
+    assert "SPIRAL" in res["answer"]
+    assert "196.133540" in res["answer"]
+
+# TEST 3 — NEBULA
+def test_space_ai_part12_test3_nebula():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "TEST-NEB-01",
+        "predicted_object_type": "NEBULA_CANDIDATE",
+        "confidence": 0.82,
+        "coordinates": None
+    }
+    res = service.answer_question("Explain this observation.", observation_context=ctx)
+    assert res["scope"] == "observation_analysis"
+    assert "NEBULA_CANDIDATE" in res["answer"]
+    assert "Not applicable" in res["answer"]
+    assert "0.000000" not in res["answer"]
+
+# TEST 4 — AMBIGUOUS POINT SOURCE
+def test_space_ai_part12_test4_ambiguous_point_source():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "TEST-AMB-01",
+        "predicted_object_type": "AMBIGUOUS_POINT_SOURCE",
+        "confidence": 0.55,
+        "coordinates": None
+    }
+    res = service.answer_question("Explain this observation.", observation_context=ctx)
+    assert res["scope"] == "observation_analysis"
+    assert "AMBIGUOUS_POINT_SOURCE" in res["answer"]
+    assert "Not applicable" in res["answer"]
+    assert "0.000000" not in res["answer"]
+
+# TEST 5 — USER UPLOAD WITHOUT COORDINATES
+def test_space_ai_part12_test5_user_upload():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "LIVE-20260920-UPLOAD1",
+        "source": "USER_UPLOAD",
+        "predicted_object_type": "STAR",
+        "coordinates": {"ra": 0.0, "dec": 0.0},
+        "has_coordinates": False
+    }
+    res = service.answer_question("Explain this observation.", observation_context=ctx)
+    assert res["scope"] == "observation_analysis"
+    assert "0.000000" not in res["answer"]
+    assert "Sky coordinates were not provided with this image" in res["answer"]
+
+# TEST 6 — REAL LIBRARY OBSERVATION
+def test_space_ai_part12_test6_real_library_observation():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "LIB-000503",
+        "source": "LIBRARY",
+        "object_type": "GALAXY",
+        "predicted_object_type": "GALAXY",
+        "broad_morphology": "SPIRAL",
+        "gz2class": "SBb",
+        "confidence": 0.91,
+        "coordinates": {"ra": 196.13354, "dec": -3.58839},
+        "has_coordinates": True,
+        "triage": {"priority": "HIGH", "anomaly_score": 0.76}
+    }
+    res = service.answer_question("Explain this observation.", observation_context=ctx)
+    assert res["scope"] == "observation_analysis"
+    assert "LIB-000503" in res["answer"]
+    assert "GALAXY" in res["answer"]
+    assert "196.133540" in res["answer"]
+
+# TEST 7 — FOLLOW-UP
+def test_space_ai_part12_test7_followup():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "TEST-STAR-02",
+        "predicted_object_type": "STAR",
+        "confidence": 0.95
+    }
+    res1 = service.answer_question("Explain this observation.", observation_context=ctx)
+    res2 = service.answer_question("More details.", observation_context=ctx)
+    assert "TEST-STAR-02" in res2["answer"]
+    assert "STAR" in res2["answer"]
+
+# TEST 8 — COORDINATE QUESTION
+def test_space_ai_part12_test8_coordinate_question():
+    service = SpaceAIService()
+    ctx_with = {
+        "observation_id": "TEST-COORDS-YES",
+        "coordinates": {"ra": 177.07516, "dec": -3.11701},
+        "has_coordinates": True
+    }
+    res_with = service.answer_question("What are the coordinates?", observation_context=ctx_with)
+    assert "177.075160" in res_with["answer"]
+
+    ctx_without = {
+        "observation_id": "TEST-COORDS-NO",
+        "coordinates": None,
+        "has_coordinates": False
+    }
+    res_without = service.answer_question("What are the coordinates?", observation_context=ctx_without)
+    assert "0.000000" not in res_without["answer"]
+    assert "not available" in res_without["answer"].lower()
+
+
 
 

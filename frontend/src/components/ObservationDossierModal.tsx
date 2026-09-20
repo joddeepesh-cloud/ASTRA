@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Observation } from '../types';
 import { PriorityBadge } from './PriorityBadge';
+import { ObservationImage } from './ObservationImage';
 import { TriageExplanation } from './TriageExplanation';
 import { EvidenceEnrichmentPanel } from './EvidenceEnrichmentPanel';
 
@@ -29,10 +30,10 @@ export const ObservationDossierModal: React.FC<ObservationDossierModalProps> = (
 
   // Probability progress bars data
   const probItems = [
-    { label: 'Smooth', val: aiContext.probabilities.smooth, color: 'bg-[#8FAFC2]' },
-    { label: 'Edge-on Disk', val: aiContext.probabilities.edge_on, color: 'bg-[#5FC7A1]' },
-    { label: 'Featured Disk', val: aiContext.probabilities.featured_disk, color: 'bg-[#D6A84F]' },
-    { label: 'Spiral Arms', val: aiContext.probabilities.spiral, color: 'bg-[#D5DAE0]' },
+    { label: 'Smooth', val: aiContext.probabilities?.smooth ?? 0, color: 'bg-[#8FAFC2]' },
+    { label: 'Edge-on Disk', val: aiContext.probabilities?.edge_on ?? 0, color: 'bg-[#5FC7A1]' },
+    { label: 'Featured Disk', val: aiContext.probabilities?.featured_disk ?? 0, color: 'bg-[#D6A84F]' },
+    { label: 'Spiral Arms', val: aiContext.probabilities?.spiral ?? 0, color: 'bg-[#D5DAE0]' },
   ];
 
   const triageSignals = {
@@ -94,10 +95,8 @@ export const ObservationDossierModal: React.FC<ObservationDossierModalProps> = (
           
           {/* Section 1: Image & HUD Display */}
           <div className="relative aspect-[16/9] sm:aspect-[21/9] bg-black rounded-xl border border-[#C7CDD5]/30 overflow-hidden shadow-inner flex items-center justify-center">
-            <img
-              src={observation.image_url}
-              alt={observation.id}
-              loading="lazy"
+            <ObservationImage
+              observation={observation}
               className="w-full h-full object-cover opacity-90"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#030508] via-transparent to-transparent opacity-85" />

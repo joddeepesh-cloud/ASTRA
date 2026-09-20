@@ -88,10 +88,7 @@ class SpaceAIService:
         # Handle OFF_TOPIC
         if intent == INTENT_OFF_TOPIC:
             return {
-                "answer": (
-                    "I can help with astronomy, space science, observations, or how ASTRA works. "
-                    "What would you like to explore?"
-                ),
+                "answer": "I'm focused on astronomy, space science, ASTRA observations, and related analysis. Ask me something about space or this observation and I'll help.",
                 "scope": "redirect",
                 "observation_id": obs_id,
                 "grounded": True,
@@ -150,23 +147,93 @@ class SpaceAIService:
         q_lower = question.lower()
         ctx = observation_context or {}
         obs_id = ctx.get("observation_id", "Selected Observation")
-        morph = ctx.get("broad_morphology", "SPIRAL")
-        conf = ctx.get("confidence", 0.85)
-        conf_pct = ctx.get("confidence_pct", f"{conf * 100:.1f}%" if conf is not None else "N/A")
+
+        # 1. Authoritative Object Type Hierarchy Extraction (Part 2)
+        fused_obj = (
+            ctx.get("fused_object_type")
+            or (ctx.get("fused_evidence") or {}).get("fused_object_type")
+            or ((ctx.get("triage_response") or {}).get("fused_evidence") or {}).get("fused_object_type")
+        )
+        local_obj = (
+            ctx.get("predicted_object_type")
+            or ctx.get("object_type")
+            or (ctx.get("triage_response") or {}).get("predicted_object_type")
+            or (ctx.get("triage_response") or {}).get("object_type")
+            or (((ctx.get("triage_response") or {}).get("object_type_info") or {}).get("predicted_object_type"))
+        )
+
+        if fused_obj:
+            obj_type = fused_obj
+            obj_type_known = True
+        elif local_obj and local_obj != "Unknown":
+            obj_type = local_obj
+            obj_type_known = True
+        else:
+            obj_type = "ASTRA could not establish a reliable object type from the available evidence."
+            obj_type_known = False
+
+        obj_upper = str(obj_type).upper() if obj_type_known else ""
+
+        # 2. Galaxy Morphology Applicability Check (Part 3)
+        morph = ctx.get("broad_morphology", "N/A")
         gz2class = ctx.get("gz2class", "N/A")
-        triage = ctx.get("triage", {})
-        prio = triage.get("priority") or ctx.get("priority", "MEDIUM")
-        triage_score = triage.get("anomaly_score") or ctx.get("anomaly_score", 0.45)
-        novelty_score = triage.get("novelty_score") or ctx.get("ood_score") or ctx.get("novelty_score", 0.40)
-        uncertainty_score = triage.get("uncertainty_score") or ctx.get("uncertainty_score", 0.30)
-        oddity_score = triage.get("oddity_score") or ctx.get("oddity_score", 0.50)
-        ra = ctx.get("coordinates", {}).get("ra", 0.0)
-        dec = ctx.get("coordinates", {}).get("dec", 0.0)
-        provenance = ctx.get("provenance", "Galaxy Zoo 2 Survey / SDSS DR7")
-        obj_type = ctx.get("predicted_object_type") or ctx.get("object_type", "Galaxy")
+        conf = ctx.get("confidence")
+        conf_pct = ctx.get("confidence_pct") or (f"{conf * 100:.1f}%" if conf is not None else "N/A")
+
+        is_galaxy = obj_type_known and ("GALAXY" in obj_upper) and not any(
+            x in obj_upper for x in ["STAR", "NEBULA", "QUASAR", "AMBIGUOUS", "CONFLICTING", "EXOPLANET", "INCOMPATIBLE"]
+        )
+
+        if is_galaxy:
+            morph_display = f"**{morph}** (GZ2 class `{gz2class}`)"
+        else:
+            morph_display = "Not applicable (Not routed to galaxy morphology specialist)"
+
+        # 3. Strict Coordinate Validation (Part 4 & Part 5)
+        coords = ctx.get("coordinates")
+        has_coords = ctx.get("has_coordinates")
+        ra_raw = ctx.get("ra")
+        dec_raw = ctx.get("dec")
+
+        if coords and isinstance(coords, dict):
+            ra_val = coords.get("ra")
+            dec_val = coords.get("dec")
+        else:
+            ra_val = ra_raw
+            dec_val = dec_raw
+
+        coords_valid = False
+        if ra_val is not None and dec_val is not None:
+            try:
+                r_num = float(ra_val)
+                d_num = float(dec_val)
+                # Never treat 0,0 as valid coordinates for missing/fallback records
+                if not (r_num == 0.0 and d_num == 0.0) or (has_coords is True and ctx.get("source") == "LIBRARY"):
+                    coords_valid = True
+                    coords_str = f"RA {r_num:.6f}°, DEC {d_num:.6f}°"
+            except (ValueError, TypeError):
+                coords_valid = False
+
+        if not coords_valid:
+            if ctx.get("source") == "USER_UPLOAD" or ctx.get("dr7objid") == "USER-UPLOAD" or obs_id.startswith("LIVE-") or obs_id.startswith("OBS-"):
+                coords_str = "Sky coordinates were not provided with this image, so catalog cross-matching by position is unavailable."
+            else:
+                coords_str = "Sky coordinates are not available for this observation."
+
+        triage = ctx.get("triage") or {}
+        tr_resp = ctx.get("triage_response") or {}
+        prio = triage.get("priority") or tr_resp.get("priority_level") or ctx.get("priority", "MEDIUM")
+        triage_score = triage.get("anomaly_score") or tr_resp.get("experimental_triage_score") or ctx.get("anomaly_score", 0.45)
+        novelty_score = triage.get("novelty_score") or tr_resp.get("novelty_score") or ctx.get("ood_score", 0.40)
+        uncertainty_score = triage.get("uncertainty_score") or tr_resp.get("uncertainty_score", 0.30)
+        oddity_score = triage.get("oddity_score") or tr_resp.get("oddity_score", 0.50)
+        provenance = ctx.get("provenance") or (
+            "User Research Upload" if (ctx.get("source") == "USER_UPLOAD" or obs_id.startswith("LIVE-") or obs_id.startswith("OBS-"))
+            else "Galaxy Zoo 2 Survey / SDSS DR7"
+        )
 
         # Check explicit "anomaly" definition queries
-        if "anomaly" in q_lower or "anomalous" in q_lower or "what makes" in q_lower and "anomalous" in q_lower:
+        if "anomaly" in q_lower or "anomalous" in q_lower or ("what makes" in q_lower and "anomalous" in q_lower):
             if "this" not in q_lower and "observation" not in q_lower:
                 return (
                     "An **anomaly** in ASTRA does NOT mean artificial, alien, or a scientifically proven discovery.\n\n"
@@ -223,9 +290,6 @@ class SpaceAIService:
         # ----------------------------------------------------
         # Intent B: Active Observation Context Analysis
         # ----------------------------------------------------
-        # ----------------------------------------------------
-        # Intent B: Active Observation Context Analysis
-        # ----------------------------------------------------
         if intent == INTENT_OBSERVATION_ANALYSIS or (observation_context and intent not in (INTENT_ASTRONOMY_GENERAL, INTENT_ASTRA_PRODUCT, INTENT_GREETING, INTENT_OFF_TOPIC)):
             if not observation_context:
                 return (
@@ -234,86 +298,96 @@ class SpaceAIService:
                     "In general, ASTRA prioritizes observations by computing a weighted triage score from embedding novelty, morphological uncertainty, and structural oddity."
                 )
 
-            if "detail" in q_lower or "more" in q_lower or "expand" in q_lower or "further" in q_lower or "tell me more" in q_lower or "what else" in q_lower:
-                return (
-                    f"### Detailed Evidence Breakdown: {obs_id}\n\n"
-                    f"**1. Visual Morphology & Identification:**\n"
-                    f"• Target Designation: `{obs_id}`\n"
-                    f"• Object Type: **{obj_type}**\n"
-                    f"• Morphology Classification: **{morph}** (GZ2 class `{gz2class}`)\n"
-                    f"• Inference Confidence: **{conf_pct}**\n\n"
-                    f"**2. Quantitative Triage Decomposition:**\n"
-                    f"• Overall Triage Score: **{triage_score:.2f}** ({prio} Priority)\n"
-                    f"• Novelty Component ($S_{{novelty}}$): `{novelty_score:.2f}` (Latent feature distance from reference population)\n"
-                    f"• Uncertainty Component ($S_{{uncertainty}}$): `{uncertainty_score:.2f}` (Model entropy across morphology vote distributions)\n"
-                    f"• Oddity Component ($S_{{oddity}}$): `{oddity_score:.2f}` (Learned probability of structural oddity)\n\n"
-                    f"**3. Astrometric & Multi-Modal Catalog Cross-Match:**\n"
-                    f"• Celestial Position: RA {ra:.6f}°, DEC {dec:.6f}°\n"
-                    f"• Survey Provenance: {provenance}\n"
-                    f"• Multi-Band Catalogs Queried: Gaia DR3 astrometry, SDSS DR16 photometry/spectroscopy, ALLWISE infrared, TESS light-curve archives, and NASA Exoplanet Archive.\n\n"
-                    f"**4. Scientific Limitations & Follow-Up Strategy:**\n"
-                    f"• Key Uncertainty: Multi-wavelength photometrical redshift and stellar population age remain unconstrained without direct spectroscopic pipeline cross-matching.\n"
-                    f"• Recommended Next Action: Trigger full evidence enrichment via the Evidence Fusion Panel to inspect external catalog match vectors."
-                )
+            # Specific Coordinate Question
+            if "coordinate" in q_lower or "ra" in q_lower or "dec" in q_lower:
+                if "what" in q_lower or "where" in q_lower or "show" in q_lower or "give" in q_lower:
+                    if coords_valid:
+                        return f"Celestial coordinates for target `{obs_id}`:\n• **RA**: {float(ra_val):.6f}°\n• **DEC**: {float(dec_val):.6f}°"
+                    else:
+                        return f"Sky coordinates for target `{obs_id}`:\n• {coords_str}"
 
             if "star" in q_lower and ("why" in q_lower or "classified" in q_lower or "is" in q_lower):
-                return (
-                    f"Target `{obs_id}` was classified as **{obj_type}**.\n\n"
-                    f"• **Visual Evidence:** Cutout exhibits a point-source diffraction profile rather than an extended galactic disk or spiral arms.\n"
-                    f"• **Classification Confidence:** {conf_pct}\n"
-                    f"• **Triage Signal:** Assigned priority {prio} (Triage Score: {triage_score:.2f}).\n"
-                    f"• **Catalog Evidence:** Cross-matched with Gaia DR3 astrometric parallax and SDSS photometrical profile supporting stellar object classification."
-                )
+                if obj_upper == "STAR":
+                    return (
+                        f"Target `{obs_id}` was classified as **STAR**.\n\n"
+                        f"• **Visual Evidence:** Cutout exhibits point-source diffraction geometry rather than an extended galactic envelope or disk arms.\n"
+                        f"• **Classification Confidence:** {conf_pct}\n"
+                        f"• **Galaxy Morphology:** Galaxy Zoo morphology specialist was not executed because this target was resolved as a stellar point-source.\n"
+                        f"• **Triage Signal:** Priority {prio} (Score: {triage_score:.2f}).\n"
+                        f"• **Catalog Evidence:** Cross-matched with Gaia DR3 astrometric parallax and SDSS photometrical profile supporting stellar object classification."
+                    )
+                else:
+                    return f"Observation `{obs_id}` was classified as **{obj_type}**, not a star."
 
             if "galaxy" in q_lower and ("not" in q_lower or "n't" in q_lower or "why" in q_lower):
-                return (
-                    f"For observation `{obs_id}`:\n\n"
-                    f"ASTRA's open-world morphology router evaluated the visual features of this cutout. Unlike extended galaxies (which exhibit disk envelopes, spiral arms, or bulge structures), `{obs_id}` exhibits point-source geometry ({obj_type}).\n\n"
-                    f"Therefore, Galaxy Zoo morphology vote distribution was bypassed in favor of direct point-source classification with {conf_pct} confidence."
-                )
+                if is_galaxy:
+                    return (
+                        f"Target `{obs_id}` was classified as **GALAXY** ({conf_pct} confidence).\n\n"
+                        f"• **Visual Evidence:** Cutout exhibits extended galactic disk structure.\n"
+                        f"• **Galaxy Morphology:** {morph_display}\n"
+                        f"• **Triage Signal:** Priority {prio} (Score: {triage_score:.2f})."
+                    )
+                else:
+                    return (
+                        f"Observation `{obs_id}` was classified as **{obj_type}**, not a galaxy.\n\n"
+                        f"Galaxy Zoo morphology vote distribution was not executed because this target was resolved as a non-galaxy observation ({obj_type})."
+                    )
 
-            if "quasar" in q_lower or "exoplanet" in q_lower or "candidate" in q_lower:
-                return (
-                    f"For observation `{obs_id}`:\n\n"
-                    f"• Current Classification: **{obj_type}** ({conf_pct} confidence)\n"
-                    f"• Triage Score: **{triage_score:.2f}** ({prio} Priority)\n"
-                    f"• Confirmation Requirements: Establishing an object as a Quasar requires high-redshift broad emission line spectroscopy from SDSS/DESI. Establishing an Exoplanet candidate requires TESS photometric transit light curves.\n"
-                    f"• Multi-Modal Evidence Status: Querying external Gaia/SDSS/TESS adapters via the Evidence Enrichment Panel allows further cross-matching."
-                )
+            if "quasar" in q_lower or "exoplanet" in q_lower:
+                if "quasar" in q_lower:
+                    if obj_upper in ("QUASAR_CANDIDATE", "QUASAR"):
+                        return (
+                            f"Target `{obs_id}` is classified as **QUASAR_CANDIDATE** ({conf_pct} confidence).\n\n"
+                            f"• **Visual Evidence:** Compact point-source core emission.\n"
+                            f"• **Triage Score:** {triage_score:.2f} ({prio} Priority).\n"
+                            f"• **Confirmation Requirements:** Establishing a confirmed quasar requires high-redshift broad emission line spectroscopy from SDSS/DESI. Optical snapshot imaging alone indicates a candidate."
+                        )
+                    elif obj_upper in ("AMBIGUOUS_POINT_SOURCE", "STAR"):
+                        return (
+                            f"For observation `{obs_id}` ({obj_type}):\n\n"
+                            f"• The image contains a compact astronomical source consistent with a quasar candidate, but available visual evidence is insufficient to distinguish a star from a quasar.\n"
+                            f"• Establishing a quasar requires high-redshift broad emission line spectroscopy from SDSS/DESI."
+                        )
+                    else:
+                        return (
+                            f"Target `{obs_id}` exhibits extended galactic disk structure ({obj_type}) rather than an unresolved quasar point-source core."
+                        )
+
+                if "exoplanet" in q_lower:
+                    return (
+                        f"For observation `{obs_id}`:\n\n"
+                        f"Establishing an exoplanet candidate requires TESS photometric transit light curves or radial velocity measurements. Optical snapshot imaging alone cannot confirm an exoplanet."
+                    )
 
             if "evidence" in q_lower:
                 return (
                     f"### Multi-Modal Evidence Summary for `{obs_id}`:\n\n"
-                    f"1. **Visual Model Inference:** {obj_type} — {morph} morphology ({conf_pct} confidence).\n"
-                    f"2. **Triage Priority:** {prio} (Score: {triage_score:.2f} = 0.35*{novelty_score:.2f} + 0.35*{uncertainty_score:.2f} + 0.30*{oddity_score:.2f}).\n"
-                    f"3. **Coordinates:** RA {ra:.6f}°, DEC {dec:.6f}°.\n"
-                    f"4. **Survey Provenance:** {provenance}.\n"
-                    f"5. **Catalog Status:** Cross-matched across Gaia DR3, SDSS DR16, ALLWISE, TESS, and NASA Exoplanet Archive."
+                    f"1. **Object Classification:** **{obj_type}** ({conf_pct} confidence).\n"
+                    f"2. **Morphology Status:** {morph_display}.\n"
+                    f"3. **Triage Priority:** {prio} (Score: {triage_score:.2f} = 0.35*{novelty_score:.2f} + 0.35*{uncertainty_score:.2f} + 0.30*{oddity_score:.2f}).\n"
+                    f"4. **Position:** {coords_str}.\n"
+                    f"5. **Survey Provenance:** {provenance}."
                 )
 
-            if "student" in q_lower or "simple" in q_lower or "first-year" in q_lower:
+            if "detail" in q_lower or "more" in q_lower or "expand" in q_lower or "further" in q_lower or "tell me more" in q_lower or "what else" in q_lower:
                 return (
-                    f"Here is a simple breakdown of observation `{obs_id}`:\n\n"
-                    f"1. **What is it?** ASTRA identified this picture as a **{obj_type}** ({morph} shape).\n"
-                    f"2. **How sure is ASTRA?** Model confidence is **{conf_pct}**.\n"
-                    f"3. **Is it special?** ASTRA gave it a triage score of **{triage_score:.2f}** (Priority: **{prio}**). This means its appearance stands out compared to average space photos.\n"
-                    f"4. **What's next?** Scientists look at catalog data from satellites like Gaia and telescopes like SDSS to double-check the physics."
-                )
-
-            if "anomaly" in q_lower or "score" in q_lower or "triage" in q_lower:
-                return (
-                    f"For observation `{obs_id}`:\n\n"
-                    f"The experimental triage score is **{triage_score:.2f}**, calculated using ASTRA's canonical triage formula:\n\n"
-                    f"Score = 0.35 * S_novelty ({novelty_score:.2f}) + 0.35 * S_uncertainty ({uncertainty_score:.2f}) + 0.30 * S_oddity ({oddity_score:.2f})\n\n"
-                    f"Assigning this target a priority level of **{prio}** for scientific review."
-                )
-
-            if "redshift" in q_lower or "distance" in q_lower or "mass" in q_lower or "age" in q_lower or "composition" in q_lower:
-                return (
-                    f"Physical parameters such as exact redshift, light-year distance, stellar mass, and galaxy age "
-                    f"are not available in the current ASTRA observation record for {obs_id}.\n\n"
-                    f"Available parameters: Target ID {obs_id}, Coordinates (RA {ra:.4f}°, DEC {dec:.4f}°), "
-                    f"Predicted Class: {morph} ({conf_pct} confidence), and Triage Priority: {prio} (Score: {triage_score:.2f})."
+                    f"### Detailed Evidence Breakdown: {obs_id}\n\n"
+                    f"**1. Visual Identification & Object Type:**\n"
+                    f"• Target Designation: `{obs_id}`\n"
+                    f"• Authoritative Object Type: **{obj_type}**\n"
+                    f"• Morphology Status: {morph_display}\n"
+                    f"• Inference Confidence: **{conf_pct}**\n\n"
+                    f"**2. Quantitative Triage Decomposition:**\n"
+                    f"• Overall Triage Score: **{triage_score:.2f}** ({prio} Priority)\n"
+                    f"• Novelty Component ($S_{{novelty}}$): `{novelty_score:.2f}` (Latent feature distance from reference population)\n"
+                    f"• Uncertainty Component ($S_{{uncertainty}}$): `{uncertainty_score:.2f}` (Model prediction entropy)\n"
+                    f"• Oddity Component ($S_{{oddity}}$): `{oddity_score:.2f}` (Learned probability of structural oddity)\n\n"
+                    f"**3. Astrometric & Survey Provenance:**\n"
+                    f"• Celestial Position: {coords_str}\n"
+                    f"• Survey Provenance: {provenance}\n\n"
+                    f"**4. Scientific Limitations & Follow-Up Strategy:**\n"
+                    f"• Key Uncertainty: Multi-wavelength photometrical redshift and stellar population age require multi-band catalog cross-matching.\n"
+                    f"• Recommended Next Action: Trigger full evidence enrichment via the Evidence Fusion Panel to inspect external catalog match vectors."
                 )
 
             if "discovery" in q_lower or "new galaxy" in q_lower or "prove" in q_lower or "alien" in q_lower:
@@ -323,40 +397,64 @@ class SpaceAIService:
                     f"This does not establish that the object is new or a scientific discovery. Human astronomical review and spectroscopic follow-up would be required to verify its physical nature."
                 )
 
-            if "priority" in q_lower or "prioritiz" in q_lower or "why" in q_lower and "flagged" in q_lower:
+            if "priority" in q_lower or "prioritiz" in q_lower:
                 return (
                     f"Observation {obs_id} was assigned priority level '{prio}' with an experimental triage score of {triage_score:.2f}.\n\n"
                     f"Triage Signals Breakdown:\n"
-                    f"• Novelty Score (S_novelty): {novelty_score:.2f} — Latent distance from reference galaxy embeddings.\n"
+                    f"• Novelty Score (S_novelty): {novelty_score:.2f} — Latent distance from reference embeddings.\n"
                     f"• Uncertainty Score (S_uncertainty): {uncertainty_score:.2f} — Entropy of morphological vote distribution.\n"
                     f"• Oddity Score (S_oddity): {oddity_score:.2f} — Probability of unusual structural features.\n\n"
-                    f"Summary: The combined score exceeds the {prio} priority threshold, placing it in the scientific review queue."
+                    f"Summary: The combined score places it in the scientific review queue."
                 )
 
-            # Rich Default observation explanation for Deep Analysis requests
+            # Rich Default Observation Explanation for Deep Analysis Entry (Part 8)
             return (
                 f"### Scientific Target Analysis: {obs_id}\n\n"
-                f"**1. Target Overview & Image Content:**\n"
+                f"**1. Target Overview & Position:**\n"
                 f"• Target Designation: `{obs_id}`\n"
-                f"• Celestial Coordinates: RA {ra:.6f}°, DEC {dec:.6f}°\n"
+                f"• Celestial Position: {coords_str}\n"
                 f"• Data Provenance: {provenance}\n\n"
                 f"**2. ASTRA Object Classification:**\n"
-                f"• Predicted Object Type: **{obj_type}**\n"
-                f"• Morphology Taxonomy: **{morph}** (GZ2 class `{gz2class}`)\n"
+                f"• Authoritative Object Type: **{obj_type}**\n"
+                f"• Morphology Status: {morph_display}\n"
                 f"• Classification Confidence: **{conf_pct}**\n\n"
                 f"**3. Statistical Triage Signals:**\n"
                 f"• Experimental Triage Score: **{triage_score:.2f}**\n"
                 f"• Priority Level: **{prio}**\n"
                 f"• Novelty ($S_{{novelty}}$): `{novelty_score:.2f}` | Uncertainty ($S_{{uncertainty}}$): `{uncertainty_score:.2f}` | Oddity ($S_{{oddity}}$): `{oddity_score:.2f}`\n\n"
                 f"**4. Scientific Status & Recommended Next Steps:**\n"
-                f"• What is Known: Visual structure matches learned survey reference population for {morph.lower().replace('_', ' ')} morphology.\n"
-                f"• What Remains Uncertain: Photometrical redshift and exact spectral composition require multi-band catalog cross-matching.\n"
+                f"• What is Known: Target visual structure was evaluated by ASTRA's open-world classifier and statistical triage engine.\n"
+                f"• What Remains Uncertain: Physical parameters (spectroscopic redshift, stellar mass, absolute distance) require multi-band catalog cross-matching.\n"
                 f"• Recommended Action: Query Gaia DR3 / SDSS DR17 spectra for detailed physical validation."
             )
 
         # ----------------------------------------------------
         # Intent C: General Astronomy & Astrophysics Q&A
         # ----------------------------------------------------
+        if "star" in q_lower and ("what is" in q_lower or "definition" in q_lower or q_lower.strip() == "what is a star?"):
+            return (
+                "A star is a luminous sphere of plasma held together by its own gravity, powered by nuclear fusion of hydrogen into helium in its core. "
+                "Stars undergo stellar evolution across their lifetimes, ending as white dwarfs, neutron stars, or black holes depending on initial stellar mass."
+            )
+
+        if "nebula" in q_lower or "nebulae" in q_lower:
+            return (
+                "A nebula is an interstellar cloud of dust, hydrogen, helium, and other ionized gases. "
+                "Nebulae serve as stellar nurseries where new stars condense (emission/reflection nebulae) or represent expanding remnants of dying stars (planetary nebulae and supernova remnants)."
+            )
+
+        if "cluster" in q_lower or "galaxy cluster" in q_lower:
+            return (
+                "A galaxy cluster is a structure consisting of hundreds to thousands of galaxies bound together by gravity. "
+                "They are the largest gravitationally bound structures in the universe, permeated by hot intracluster gas and held together by dark matter."
+            )
+
+        if "tess" in q_lower or "light curve" in q_lower or "lightcurve" in q_lower:
+            return (
+                "TESS (Transiting Exoplanet Survey Satellite) is a NASA space telescope that monitors wide sectors of the sky to detect exoplanets using transit photometry. "
+                "A transit occurs when an exoplanet passes in front of its host star relative to Earth. A light curve plots stellar brightness over time, where characteristic dips reveal exoplanet transit depth, duration, and orbital period."
+            )
+
         if "black hole" in q_lower or "event horizon" in q_lower or "singularity" in q_lower:
             return (
                 "A black hole is a region of spacetime where gravity is so strong that nothing—not even light—can escape. "

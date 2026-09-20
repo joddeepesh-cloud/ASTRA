@@ -17,19 +17,29 @@ GREETING_PATTERNS = [
 ]
 
 OFF_TOPIC_KEYWORDS = [
-    "fifa", "football", "soccer", "cricket", "basketball", "nba", "baseball", "tennis",
-    "programming", "coding", "script",
-    "iphone", "android", "samsung", "recipe", "pizza", "burger",
+    "fifa", "football", "soccer", "cricket", "basketball", "nba", "baseball", "tennis", "sports", "match",
+    "programming", "coding", "script", "python", "java", "c++", "javascript", "react", "html", "css",
+    "iphone", "android", "samsung", "recipe", "pizza", "burger", "cook", "cooking", "food",
+    "resume", "job", "career", "interview", "salary",
     "joke", "funny", "crypto", "bitcoin", "stock market", "finance", "medical", "doctor",
     "president", "prime minister", "government", "politics", "election", "movie", "song", "weather"
 ]
 
+OFF_TOPIC_PATTERNS = [
+    r"^(write|create|build|generate|make)\s+(me\s+)?(a\s+)?(python|code|program|script|app|software|recipe|poem|essay|resume|cover letter)\b",
+    r"\bwho\s+won\s+the\s+(football|soccer|cricket|nba|match|game)\b",
+    r"\bhow\s+to\s+(cook|bake|make)\b",
+    r"\bhelp\s+(me\s+)?with\s+(my\s+)?(resume|cv|job|interview)\b"
+]
+
 # Explicit terms referring specifically to the currently active observation payload
 OBSERVATION_EXPLICIT_PATTERNS = [
+    r"^(more\s+details|tell\s+me\s+more|why\s*\?|what\s+else(\s+can\s+you\s+tell\s+me)?\??|how\s+sure(\s+are\s+you)?\??|and\s+the\s+score\??|what\s+about\s+that\??|what\s+looks\s+unusual\??|what\s+should\s+we\s+investigate\s+next\??)$",
     r"\b(this|it|active|selected|current)\s+(observation|target|galaxy|star|quasar|nebula|exoplanet|image|object|result|score|anomaly)\b",
-    r"\bwhy\s+(was|is|isn't)\s+(this|it|the)\s+(observation|target|galaxy|star|quasar|nebula|exoplanet|image)?\s*(a|an)?\s*(prioritized|flagged|high|critical|medium|low|star|galaxy|quasar|nebula|exoplanet)\b",
+    r"\bwhy\s+(was|is|isn't)\s+(this|it)\s+(a|an)?\s*(prioritized|flagged|high|critical|medium|low|star|galaxy|quasar|nebula|exoplanet)?\b",
     r"\bwhy\s+(is|was|isn't)\s+(this|it)\b",
-    r"\b(explain|interpret|summarize)\s+(this|it|the)\s+(result|observation|target|image|dossier|score|evidence)\b",
+    r"\b(explain|interpret|summarize|tell\s+me\s+about)\s+(this|it)\s*(result|observation|target|image|dossier|score|evidence)?\b",
+    r"\bwhat\s+(is|about)\s+(this|it)\b",
     r"\bwhat\s+(does|did)\s+astra\s+(think|predict|find)\s+(about|for)\s+(this|it)\b",
     r"\bwhy\s+did\s+the\s+model\s+classify\s+(this|it)\b",
     r"\b(is|was)\s+(this|it)\s+(a\s+)?(new|unusual|exotic|anomalous|star|galaxy|quasar|nebula|exoplanet)\b",
@@ -40,7 +50,7 @@ OBSERVATION_EXPLICIT_PATTERNS = [
     r"\b(provide|give|generate|show)\s+(a\s+)?(detailed\s+)?(scientific\s+)?(explanation|analysis)\s+(of|for)\s+(observation|target|this|it)\b",
     r"\bobservation\s+(lib-|live-|obs-)\b",
     r"\b(lib-|live-|obs-)[a-z0-9-_]+\b",
-    r"\bwhat\s+evidence\s+(do\s+we\s+have|is\s+there|would\s+confirm)\b"
+    r"\bwhat\s+evidence\s+(do\s+we\s+have|is\s+there|would\s+confirm|does\s+the\s+gaia\s+evidence\s+mean)\b"
 ]
 
 # Terms referring specifically to ASTRA product system, pipeline, gates, and triage methodology
@@ -55,7 +65,7 @@ ASTRA_PRODUCT_PATTERNS = [
     r"\b(what\s+(is|are|do\s+we\s+mean\s+by)\s+(an?\s*)?anomaly|anomalies|anomalous|outlier|ood|divergence)\b",
     r"\b(why\s+is\s+this|why\s+was\s+this|what\s+makes\s+something)\s+(anomalous|flagged|prioritized)\b",
     r"\b(explain|definition\s+of)\s+anomaly\b",
-    r"\banomaly\b"
+    r"\bhow\s+does\s+astra\s+detect\s+unusual\s+observations\b"
 ]
 
 # Broad astronomy, astrophysics, solar system, cosmology, observational terms & question structures
@@ -74,11 +84,13 @@ ASTRONOMY_KEYWORDS = [
     "telescope", "telescopes", "observatory", "observatories", "spectrograph",
     "spectroscopy", "photometry", "spectrum", "spectra", "wavelength", "light-year",
     "lightyear", "parsec", "celestial", "transit", "radial velocity", "astronomical",
-    "transient", "instrumentation", "anomaly", "anomalous", "triage", "outlier"
+    "transient", "instrumentation", "tess", "light curve", "lightcurve"
 ]
 
 ASTRONOMY_QUESTION_PATTERNS = [
-    r"\bwhat\s+(causes|is|are)\s+a?\s*(supernova|black\s+hole|quasar|galaxy|exoplanet|light-year|parsec|redshift|event\s+horizon|spectrograph|transient|dark\s+matter)\b",
+    r"\bwhat\s+(is|are|causes)\s+a?\s*(galaxy|spiral\s+galaxy|quasar|star|nebula|black\s+hole|neutron\s+star|supernova|gravitational\s+lensing|transit|light\s+curve|galaxy\s+cluster|dark\s+matter|dark\s+energy)\b",
+    r"\bhow\s+do\s+astronomers\s+detect\s+exoplanets\b",
+    r"\bhow\s+does\s+tess\s+work\b",
     r"\bwhy\s+do\s+(stars|galaxies|planets)\b",
     r"\bwhy\s+does\s+(mars|the\s+sun|a\s+star)\b",
     r"\bhow\s+(do|does)\s+(astronomers|telescopes|spectrographs|a\s+telescope)\b",
@@ -116,16 +128,7 @@ class SpaceAIRouter:
                     "reason": "Matched greeting pattern"
                 }
 
-        # 2. Check Explicit Observation Questions FIRST if user uses observation-specific phrasing
-        for pat in OBSERVATION_EXPLICIT_PATTERNS:
-            if re.search(pat, q_lower):
-                return {
-                    "intent": INTENT_OBSERVATION_ANALYSIS,
-                    "needs_observation_context": True,
-                    "reason": f"Matched explicit observation pattern: {pat}"
-                }
-
-        # 3. Check explicit OFF-TOPIC keywords (e.g. fifa, recipe, stocks, etc.)
+        # 2. Check explicit OFF-TOPIC keywords and patterns (e.g. fifa, recipe, stocks, programming, etc.)
         for kw in OFF_TOPIC_KEYWORDS:
             if re.search(r"\b" + re.escape(kw) + r"\b", q_lower):
                 return {
@@ -134,22 +137,39 @@ class SpaceAIRouter:
                     "reason": f"Matched off-topic keyword '{kw}'"
                 }
 
-        # 4. Check explicit standalone general astronomy questions (e.g. "What is a black hole?")
-        for pat in ASTRONOMY_QUESTION_PATTERNS:
+        for pat in OFF_TOPIC_PATTERNS:
             if re.search(pat, q_lower):
                 return {
-                    "intent": INTENT_ASTRONOMY_GENERAL,
+                    "intent": INTENT_OFF_TOPIC,
                     "needs_observation_context": False,
-                    "reason": f"Matched astronomy question pattern: {pat}"
+                    "reason": f"Matched off-topic pattern '{pat}'"
                 }
 
-        # 5. Check ASTRA Product Questions
+        # 3. Check ASTRA Product Questions FIRST (e.g. triage score, domain gate, discovery caution)
         for pat in ASTRA_PRODUCT_PATTERNS:
             if re.search(pat, q_lower):
                 return {
                     "intent": INTENT_ASTRA_PRODUCT,
                     "needs_observation_context": False,
                     "reason": f"Matched ASTRA product pattern: {pat}"
+                }
+
+        # 4. Check Explicit Observation Questions if user uses observation-specific phrasing
+        for pat in OBSERVATION_EXPLICIT_PATTERNS:
+            if re.search(pat, q_lower):
+                return {
+                    "intent": INTENT_OBSERVATION_ANALYSIS,
+                    "needs_observation_context": True,
+                    "reason": f"Matched explicit observation pattern: {pat}"
+                }
+
+        # 5. Check explicit standalone general astronomy questions (e.g. "What is a black hole?", "Why does Mars look red?")
+        for pat in ASTRONOMY_QUESTION_PATTERNS:
+            if re.search(pat, q_lower):
+                return {
+                    "intent": INTENT_ASTRONOMY_GENERAL,
+                    "needs_observation_context": False,
+                    "reason": f"Matched astronomy question pattern: {pat}"
                 }
 
         if any(kw in q_lower for kw in ASTRONOMY_KEYWORDS):
