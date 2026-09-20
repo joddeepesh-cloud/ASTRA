@@ -16,7 +16,7 @@ import { CosmicBackground } from '../components/CosmicBackground';
 
 import type { TriageResponse } from '../types/api';
 
-import { recordLiveAnalysis, getAnalysisHistory } from '../services/analysisHistory';
+import { getAnalysisHistory } from '../services/analysisHistory';
 import type { AnalysisHistoryRecord } from '../types';
 
 interface AppLayoutProps {
@@ -125,6 +125,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
   const handleInspectLiveResult = (result: TriageResponse, _file: File, previewUrl: string) => {
     const now = new Date();
     const dateStr = now.toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+    const targetObsId = result.observation_id || `LIVE-${dateStr}`;
+    const imageKey = `IMG-${targetObsId}`;
+
     const broadMorph = (
       result.predicted_class === 'SPIRAL'
         ? 'SPIRAL'
@@ -136,11 +139,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
     );
 
     const liveObs: Observation = {
-      id: `LIVE-${dateStr}`,
+      id: targetObsId,
       dr7objid: 'N/A (USER FILE)',
       asset_id: 999999,
-      ra: 0.0,
-      dec: 0.0,
+      ra: result.ra ?? 0.0,
+      dec: result.dec ?? 0.0,
       gz2class: result.predicted_class || 'SMOOTH',
       broad_morphology: broadMorph,
       object_type: (result.object_type === 'GALAXY' || result.object_type === 'Galaxy') ? 'Galaxy' : 'Unresolved astronomical source',
@@ -152,6 +155,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
       catalog_name: 'Unregistered User Upload',
       observation_time: now.toISOString(),
       image_url: previewUrl,
+      image_key: imageKey,
       split: 'live',
       explanation: result.explanation,
       morphology_probs: result.class_probabilities
@@ -165,7 +169,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
       triage_response: result
     };
 
-    recordLiveAnalysis(result, _file.name, liveObs.id);
     navigateToTab('detail', liveObs);
   };
 
@@ -282,6 +285,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onGoToLanding, initialTab 
             <ObservationDetailPage
               observation={selectedObservation}
               onBack={handleGoBack}
+              onAskAI={(obs) => navigateToTab('copilot', obs)}
+              onPinToQueue={() => navigateToTab('anomalies')}
             />
           )}
 

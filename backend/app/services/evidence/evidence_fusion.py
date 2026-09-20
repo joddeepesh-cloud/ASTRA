@@ -74,7 +74,7 @@ class EvidenceFusionEngine:
             )
 
         # 4. Handle Point Sources (STAR vs QUASAR vs AMBIGUOUS vs CONFLICT)
-        if local_pred in ("AMBIGUOUS_POINT_SOURCE", "STAR", "QUASAR"):
+        if local_pred in ("AMBIGUOUS_POINT_SOURCE", "STAR", "QUASAR", "QUASAR_CANDIDATE"):
             return self._fuse_point_source(local_result, evidence_bundle, match_quality, prov_chain)
 
         # 5. Handle Diffuse Sources / NEBULA
@@ -132,6 +132,7 @@ class EvidenceFusionEngine:
         w_photo = bundle.photometry
         exo_ev = bundle.exoplanet
         ts_ev = bundle.time_series
+        local_pred = local_result.get("predicted_object_type", "AMBIGUOUS_POINT_SOURCE")
 
         # Stellar evidence strength evaluation
         has_strong_star = False
@@ -232,40 +233,42 @@ class EvidenceFusionEngine:
                 scientific_disclaimer="Preserved in conservative conflicting state. Requires manual expert review."
             )
 
-        # 4. STAR DECISION: Strong stellar evidence, no quasar evidence
-        if has_strong_star and not has_strong_quasar:
+        # 4. STAR DECISION: Strong stellar catalog evidence OR local visual STAR prediction without quasar conflict
+        if (has_strong_star or local_pred == "STAR") and not has_strong_quasar:
             has_both_pm = g_astrom.proper_motion_ra_mas_yr is not None and g_astrom.proper_motion_dec_mas_yr is not None
             pm_str = f" (Proper Motion: RA {g_astrom.proper_motion_ra_mas_yr:.1f}, DEC {g_astrom.proper_motion_dec_mas_yr:.1f} mas/yr)" if has_both_pm else ""
             plx_str = f" (Parallax: {g_astrom.parallax_mas:.2f} mas)" if g_astrom.parallax_mas is not None else ""
+            rationale = f"Point source light profile supported by Gaia DR3 astrometric evidence{plx_str}{pm_str}." if has_strong_star else "Point source light profile supported by OpenCLIP zero-shot visual similarity and compact PSF structural analysis."
             return FusedEvidenceResult(
                 target_decision="STAR",
-                primary_rationale=f"Point source light profile supported by Gaia DR3 astrometric evidence{plx_str}{pm_str}.",
-                evidence_level=star_strength,
+                primary_rationale=rationale,
+                evidence_level=star_strength if has_strong_star else "MODERATE",
                 match_quality=match_quality,
                 is_conflicting=False,
                 image_evidence_type="POINT_SOURCE",
-                stellar_evidence_strength=star_strength,
+                stellar_evidence_strength=star_strength if has_strong_star else "MODERATE",
                 quasar_evidence_strength="NONE",
                 exoplanet_evidence_status=exo_status,
                 provenance_chain=prov_chain,
-                scientific_disclaimer="Classification supported by unresolved point-source imaging and Gaia DR3 astrometry."
+                scientific_disclaimer="Classification supported by unresolved point-source imaging and Gaia DR3 astrometry." if has_strong_star else "Classification supported by unresolved point-source visual imaging."
             )
 
-        # 5. QUASAR CANDIDATE DECISION: Strong quasar evidence, no stellar evidence
-        if has_strong_quasar and not has_strong_star:
+        # 5. QUASAR CANDIDATE DECISION: Strong quasar catalog evidence OR local visual QUASAR candidate prediction without stellar conflict
+        if (has_strong_quasar or local_pred == "QUASAR_CANDIDATE") and not has_strong_star:
             z_str = f" (Redshift z = {s_spectro.redshift:.3f})" if s_spectro.redshift else ""
+            rationale = f"Point source light profile supported by SDSS spectroscopic quasar evidence{z_str}." if has_strong_quasar else "Point source light profile supported by OpenCLIP zero-shot visual similarity and compact AGN structural analysis."
             return FusedEvidenceResult(
                 target_decision="QUASAR_CANDIDATE",
-                primary_rationale=f"Point source light profile supported by SDSS spectroscopic quasar evidence{z_str}.",
-                evidence_level=quasar_strength,
+                primary_rationale=rationale,
+                evidence_level=quasar_strength if has_strong_quasar else "MODERATE",
                 match_quality=match_quality,
                 is_conflicting=False,
                 image_evidence_type="POINT_SOURCE",
                 stellar_evidence_strength="NONE",
-                quasar_evidence_strength=quasar_strength,
+                quasar_evidence_strength=quasar_strength if has_strong_quasar else "MODERATE",
                 exoplanet_evidence_status=exo_status,
                 provenance_chain=prov_chain,
-                scientific_disclaimer="Classification supported by point-source imaging and SDSS spectroscopic evidence."
+                scientific_disclaimer="Classification supported by point-source imaging and SDSS spectroscopic evidence." if has_strong_quasar else "Classification supported by point-source visual imaging."
             )
 
         # 6. AMBIGUOUS POINT SOURCE (Default conservative decision)

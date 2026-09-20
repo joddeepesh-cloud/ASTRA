@@ -14,6 +14,7 @@ export interface ReviewEvent {
 
 const EVENTS_STORAGE_KEY = 'astra_review_events';
 const STATES_STORAGE_KEY = 'astra_observation_review_states';
+const PINNED_STORAGE_KEY = 'astra_pinned_observations';
 export const REVIEW_EVENT_CUSTOM_TYPE = 'astra-review-event-updated';
 
 /**
@@ -68,6 +69,71 @@ export function getReviewEvents(): ReviewEvent[] {
 }
 
 /**
+ * Retrieve list of human-pinned observation IDs.
+ */
+export function getPinnedObservations(): string[] {
+  try {
+    const raw = localStorage.getItem(PINNED_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Check if a specific observation is human-pinned.
+ */
+export function isObservationPinned(observationId: string): boolean {
+  if (!observationId) return false;
+  const pinned = getPinnedObservations();
+  return pinned.includes(observationId);
+}
+
+/**
+ * Pin an observation to the Anomaly Queue (separate from ML priority).
+ */
+export function pinObservation(observationId: string): void {
+  if (!observationId) return;
+  try {
+    const pinned = getPinnedObservations();
+    if (!pinned.includes(observationId)) {
+      pinned.push(observationId);
+      localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pinned));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(REVIEW_EVENT_CUSTOM_TYPE));
+        window.dispatchEvent(
+          new CustomEvent('astra-toast', {
+            detail: {
+              title: 'Pinned to Anomaly Queue',
+              message: `Observation ${observationId} pinned for further scientific review.`,
+              type: 'info'
+            }
+          })
+        );
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to pin observation:', err);
+  }
+}
+
+/**
+ * Unpin an observation from the Anomaly Queue.
+ */
+export function unpinObservation(observationId: string): void {
+  if (!observationId) return;
+  try {
+    const pinned = getPinnedObservations().filter((id) => id !== observationId);
+    localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pinned));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(REVIEW_EVENT_CUSTOM_TYPE));
+    }
+  } catch (err) {
+    console.warn('Failed to unpin observation:', err);
+  }
+}
+
+/**
  * Record a new review event when a user performs a review action.
  * Creates an event, updates observation review state, persists both, and dispatches a DOM event + Toast notification.
  */
@@ -90,35 +156,46 @@ export function recordReviewEvent(
     message = `ASTRA recorded your approval for observation ${observationId}.`;
   } else if (action === 'DEEP_ANALYSIS') {
     newState = 'DEEP_ANALYSIS_REQUESTED';
-    title = 'Deep Analysis Requested';
-    message = `ASTRA recorded observation ${observationId} for deeper scientific follow-up.`;
+    title = 'Deep analysis requested';
+    message = `Observation ${observationId} has been flagged for further scientific analysis.`;
   }
 
   // Update observation review state
+  const existingState = getObservationReviewState(observationId);
   setObservationReviewState(observationId, newState);
 
-  // Create review event
-  const newEvent: ReviewEvent = {
-    id: `rev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-    observationId,
-    action,
-    timestamp: new Date().toISOString(),
-    title,
-    message,
-    status: newState,
-    read: false
-  };
+  const existingEvents = getReviewEvents();
+  const isDuplicateDeepAnalysis =
+    action === 'DEEP_ANALYSIS' &&
+    existingState === 'DEEP_ANALYSIS_REQUESTED' &&
+    existingEvents.some((e) => e.observationId === observationId && e.action === 'DEEP_ANALYSIS');
 
-  // Persist review event
-  try {
-    const events = getReviewEvents();
-    events.unshift(newEvent);
-    localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
-  } catch (err) {
-    console.warn('Failed to save review event:', err);
+  // Create review event if not duplicate
+  let newEvent: ReviewEvent;
+  if (isDuplicateDeepAnalysis) {
+    newEvent = existingEvents.find((e) => e.observationId === observationId && e.action === 'DEEP_ANALYSIS')!;
+  } else {
+    newEvent = {
+      id: `rev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      observationId,
+      action,
+      timestamp: new Date().toISOString(),
+      title,
+      message,
+      status: newState,
+      read: false
+    };
+
+    try {
+      const events = getReviewEvents();
+      events.unshift(newEvent);
+      localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+    } catch (err) {
+      console.warn('Failed to save review event:', err);
+    }
   }
 
-  // Broadcast custom event for reactive UI re-renders & Step 5 notification center integration
+  // Broadcast custom event for reactive UI re-renders & notification center integration
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(REVIEW_EVENT_CUSTOM_TYPE, { detail: { event: newEvent, state: newState } }));
 
@@ -176,12 +253,13 @@ export function markSingleEventAsRead(eventId: string): void {
 }
 
 /**
- * Utility to clear all review events (e.g. testing).
+ * Utility to clear all review events and pinned observations (e.g. testing).
  */
 export function clearAllReviewEvents(): void {
   try {
     localStorage.removeItem(EVENTS_STORAGE_KEY);
     localStorage.removeItem(STATES_STORAGE_KEY);
+    localStorage.removeItem(PINNED_STORAGE_KEY);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(REVIEW_EVENT_CUSTOM_TYPE));
     }
@@ -189,3 +267,4 @@ export function clearAllReviewEvents(): void {
     // Ignore error
   }
 }
+

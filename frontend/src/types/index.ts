@@ -58,6 +58,7 @@ export interface Observation {
   }[];
   is_demo?: boolean;
   is_live?: boolean;
+  image_key?: string;
   triage_response?: TriageResponse;
 }
 

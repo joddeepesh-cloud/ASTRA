@@ -3,7 +3,7 @@ import type { Observation } from '../types';
 import { askAstraAI } from '../services/api';
 import { buildAskAstraContextPayload } from '../utils/observationContext';
 import {
-  Bot, Send, Sparkles, User, RefreshCw, CheckCircle2, Info
+  Bot, Send, Sparkles, User, RefreshCw, CheckCircle2, Info, AlertTriangle
 } from 'lucide-react';
 
 const ASTRA_AI_SUGGESTIONS = [
@@ -51,8 +51,10 @@ export const CopilotPage: React.FC<CopilotPageProps> = ({ activeObservation }) =
 
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showClearChatModal, setShowClearChatModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const autoExplainedObsIdRef = useRef<string | null>(null);
 
   // Persist messages in sessionStorage for active browser session
   useEffect(() => {
@@ -70,6 +72,13 @@ export const CopilotPage: React.FC<CopilotPageProps> = ({ activeObservation }) =
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    if (activeObservation && autoExplainedObsIdRef.current !== activeObservation.id) {
+      autoExplainedObsIdRef.current = activeObservation.id;
+      handleSendMessage(`Provide a detailed scientific explanation of observation ${activeObservation.id}.`);
+    }
+  }, [activeObservation?.id]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputQuery).trim();
@@ -132,11 +141,14 @@ export const CopilotPage: React.FC<CopilotPageProps> = ({ activeObservation }) =
     }
   };
 
-  const handleClearHistory = () => {
+  const handleConfirmClearChat = () => {
+    setShowClearChatModal(false);
     const initialMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       sender: 'assistant',
-      text: 'Chat history cleared. Standby for queries regarding astronomy and ASTRA observation triage.',
+      text: activeObservation
+        ? `Conversation cleared for target ${activeObservation.id}. Ask follow-up questions or request further analysis.`
+        : 'Chat history cleared. Standby for queries regarding astronomy and ASTRA observation triage.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     setMessages([initialMsg]);
@@ -163,7 +175,7 @@ export const CopilotPage: React.FC<CopilotPageProps> = ({ activeObservation }) =
         </div>
 
         <button
-          onClick={handleClearHistory}
+          onClick={() => setShowClearChatModal(true)}
           className="text-xs font-mono-tech px-3 py-1.5 rounded-lg bg-[#15102A] hover:bg-[#21133B] text-[#8E8A9D] hover:text-white border border-[#21133B] transition-all cursor-pointer"
         >
           CLEAR CHAT
@@ -287,6 +299,40 @@ export const CopilotPage: React.FC<CopilotPageProps> = ({ activeObservation }) =
           </button>
         </form>
       </div>
+
+      {/* CLEAR CHAT CONFIRMATION MODAL OVERLAY */}
+      {showClearChatModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto font-sans-ui">
+          <div className="relative w-full max-w-md bg-[#090D14] border border-[#21133B] rounded-2xl p-6 space-y-4 shadow-2xl text-[#ECEAF2]">
+            <div className="flex items-center gap-3 border-b border-[#21133B] pb-3">
+              <AlertTriangle className="w-6 h-6 text-[#D6A84F] shrink-0" />
+              <h3 className="text-base font-bold font-serif-display text-white tracking-wider uppercase">
+                Clear Conversation?
+              </h3>
+            </div>
+
+            <p className="text-xs text-[#8E8A9D] font-sans-ui leading-relaxed">
+              This will remove all current conversation messages. {activeObservation ? `The active observation context (${activeObservation.id}) will remain attached for follow-up questions.` : ''}
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowClearChatModal(false)}
+                className="px-4 py-2 rounded-lg bg-[#15102A] hover:bg-[#21133B] text-slate-300 font-mono-tech text-xs cursor-pointer border border-[#21133B]"
+              >
+                CANCEL
+              </button>
+
+              <button
+                onClick={handleConfirmClearChat}
+                className="px-4 py-2 rounded-lg bg-[#7657B8] hover:bg-[#9B7FD4] text-white font-mono-tech text-xs font-bold cursor-pointer shadow-lg shadow-[#7657B8]/30"
+              >
+                CLEAR CHAT
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

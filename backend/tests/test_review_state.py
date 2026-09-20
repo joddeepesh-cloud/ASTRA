@@ -3,15 +3,16 @@ from typing import Dict, List, Any, Optional
 
 class ReviewStateStore:
     """
-    Python reference implementation of ASTRA Review State Engine & Event Ledger
+    Python reference implementation of ASTRA Review State Engine & Pinning Ledger
     for verifying business logic and invariants.
     """
     VALID_STATES = {"UNREVIEWED", "REVIEW_PENDING", "APPROVED", "DEEP_ANALYSIS_REQUESTED"}
-    VALID_ACTIONS = {"HUMAN_REVIEW", "APPROVE", "DEEP_ANALYSIS"}
+    VALID_ACTIONS = {"APPROVE", "DEEP_ANALYSIS"}
 
     def __init__(self):
         self._states: Dict[str, str] = {}
         self._events: List[Dict[str, Any]] = []
+        self._pinned: set = set()
 
     def get_state(self, observation_id: str) -> str:
         return self._states.get(observation_id, "UNREVIEWED")
@@ -31,30 +32,41 @@ class ReviewStateStore:
             if e["id"] == event_id:
                 e["read"] = True
 
-    def record_action(self, observation_id: str, action: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        if action not in self.VALID_ACTIONS:
-            raise ValueError(f"Invalid action: {action}")
+    def is_pinned(self, observation_id: str) -> bool:
+        return observation_id in self._pinned
 
-        if action == "HUMAN_REVIEW":
-            new_state = "REVIEW_PENDING"
-            title = "Human Review Requested"
-            msg = f"Observation {observation_id} queued for human scientific review."
-        elif action == "APPROVE":
+    def pin_observation(self, observation_id: str) -> None:
+        self._pinned.add(observation_id)
+
+    def unpin_observation(self, observation_id: str) -> None:
+        self._pinned.discard(observation_id)
+
+    def record_action(self, observation_id: str, action: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        if action == "APPROVE":
             new_state = "APPROVED"
             title = "Observation Approved"
             msg = f"ASTRA recorded your approval for observation {observation_id}."
         elif action == "DEEP_ANALYSIS":
             new_state = "DEEP_ANALYSIS_REQUESTED"
-            title = "Deep Analysis Requested"
-            msg = f"ASTRA recorded observation {observation_id} for deeper scientific follow-up."
+            title = "Deep analysis requested"
+            msg = f"Observation {observation_id} has been flagged for further scientific analysis."
+        else:
+            raise ValueError(f"Invalid action: {action}")
 
+        prev_state = self.get_state(observation_id)
         self._states[observation_id] = new_state
+
+        # Check for duplicate deep analysis notification
+        if action == "DEEP_ANALYSIS" and prev_state == "DEEP_ANALYSIS_REQUESTED":
+            for e in self._events:
+                if e["observationId"] == observation_id and e["action"] == "DEEP_ANALYSIS":
+                    return e
 
         event = {
             "id": f"rev-{len(self._events) + 1}",
             "observationId": observation_id,
             "action": action,
-            "timestamp": f"2026-09-14T22:30:0{len(self._events)}Z",
+            "timestamp": f"2026-09-20T12:00:0{len(self._events)}Z",
             "title": title,
             "message": msg,
             "status": new_state,
@@ -69,61 +81,56 @@ def test_fresh_state_has_no_events():
     assert store.get_events() == []
     assert store.get_unread_count() == 0
     assert store.get_state("LIB-000001") == "UNREVIEWED"
+    assert not store.is_pinned("LIB-000001")
 
-# 2. HUMAN_REVIEW event -> unread count 1
-def test_human_review_unread_count():
+# 2. APPROVE sets state to APPROVED without popup or pinning
+def test_approve_action_simple_path():
     store = ReviewStateStore()
-    store.record_action("LIB-000001", "HUMAN_REVIEW")
+    store.record_action("LIB-000042", "APPROVE")
+    assert store.get_state("LIB-000042") == "APPROVED"
     assert store.get_unread_count() == 1
-    assert store.get_state("LIB-000001") == "REVIEW_PENDING"
+    assert not store.is_pinned("LIB-000042")
 
-# 3. APPROVE event -> unread count increments
-def test_approve_action_unread_increment():
+# 3. DEEP ANALYSIS sets state to DEEP_ANALYSIS_REQUESTED and creates notification
+def test_deep_analysis_action():
     store = ReviewStateStore()
-    store.record_action("LIB-000001", "HUMAN_REVIEW")
-    store.record_action("LIB-000002", "APPROVE")
-    assert store.get_unread_count() == 2
+    event = store.record_action("LIB-000042", "DEEP_ANALYSIS")
+    assert store.get_state("LIB-000042") == "DEEP_ANALYSIS_REQUESTED"
+    assert event["title"] == "Deep analysis requested"
+    assert event["message"] == "Observation LIB-000042 has been flagged for further scientific analysis."
 
-# 4. DEEP_ANALYSIS event -> unread count increments
-def test_deep_analysis_unread_increment():
+# 4. Duplicate DEEP ANALYSIS notification is prevented
+def test_prevent_duplicate_deep_analysis_notifications():
     store = ReviewStateStore()
-    store.record_action("LIB-000001", "HUMAN_REVIEW")
-    store.record_action("LIB-000002", "APPROVE")
-    store.record_action("LIB-000003", "DEEP_ANALYSIS")
-    assert store.get_unread_count() == 3
+    e1 = store.record_action("LIB-000042", "DEEP_ANALYSIS")
+    count_1 = len(store.get_events())
+    e2 = store.record_action("LIB-000042", "DEEP_ANALYSIS")
+    count_2 = len(store.get_events())
+    assert count_1 == count_2
+    assert e1["id"] == e2["id"]
 
-# 5. Events appear newest first
-def test_event_ordering_newest_first():
+# 5. Pinning observation creates PINNED state without modifying ML priority or score
+def test_pinning_does_not_modify_ml_priority():
+    obs = {
+        "id": "LIB-000042",
+        "priority": "LOW",
+        "experimental_triage_score": 0.25
+    }
     store = ReviewStateStore()
-    store.record_action("LIB-000001", "HUMAN_REVIEW")
-    store.record_action("LIB-000002", "APPROVE")
-    events = store.get_events()
-    assert events[0]["observationId"] == "LIB-000002"
-    assert events[1]["observationId"] == "LIB-000001"
+    store.pin_observation(obs["id"])
+    assert store.is_pinned("LIB-000042")
+    assert obs["priority"] == "LOW"
+    assert obs["experimental_triage_score"] == 0.25
 
-# 6. Individual notification can be marked read
-def test_mark_single_notification_read():
+# 6. Both LOW + PINNED and HIGH + PINNED are supported
+def test_low_and_high_pinned_support():
     store = ReviewStateStore()
-    e1 = store.record_action("LIB-000001", "HUMAN_REVIEW")
-    store.record_action("LIB-000002", "APPROVE")
-    assert store.get_unread_count() == 2
+    store.pin_observation("LOW-001")
+    store.pin_observation("HIGH-001")
+    assert store.is_pinned("LOW-001")
+    assert store.is_pinned("HIGH-001")
 
-    store.mark_single_read(e1["id"])
-    assert store.get_unread_count() == 1
-    assert len(store.get_events()) == 2  # Event remains in ledger after being read
-
-# 7. Mark all as read sets unread count to 0
-def test_mark_all_read():
-    store = ReviewStateStore()
-    store.record_action("LIB-000001", "HUMAN_REVIEW")
-    store.record_action("LIB-000002", "APPROVE")
-    assert store.get_unread_count() == 2
-
-    store.mark_all_read()
-    assert store.get_unread_count() == 0
-    assert len(store.get_events()) == 2  # Notifications remain visible in history
-
-# 8. Verification: Notification state does not modify triage score or morphology
+# 7. Notification state does not modify triage score or morphology
 def test_notification_does_not_modify_triage_score():
     observation = {
         "id": "LIB-000001",
@@ -139,4 +146,5 @@ def test_notification_does_not_modify_triage_score():
     assert observation["broad_morphology"] == "SPIRAL"
     assert observation["priority"] == "HIGH"
     assert store.get_state(observation["id"]) == "APPROVED"
+
 

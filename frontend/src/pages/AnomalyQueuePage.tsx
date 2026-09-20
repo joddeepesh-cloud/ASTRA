@@ -2,8 +2,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { Observation, PriorityLevel } from '../types';
 import libraryData from '../data/observationLibrary.json';
 import { getAnalysisHistory } from '../services/analysisHistory';
+import { ObservationImage } from '../components/ObservationImage';
 import {
   getAllObservationReviewStates,
+  getPinnedObservations,
   REVIEW_EVENT_CUSTOM_TYPE
 } from '../services/reviewEventsService';
 import { generateTriageExplanation } from '../utils/triageExplanation';
@@ -13,6 +15,7 @@ import { TriageExplanation } from '../components/TriageExplanation';
 import {
   ShieldAlert,
   Filter,
+  Bookmark,
   ArrowUpDown,
   ExternalLink,
   Cpu,
@@ -38,12 +41,14 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
   const [reviewFilter, setReviewFilter] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<'anomaly_score' | 'confidence' | 'time'>('anomaly_score');
   const [reviewStates, setReviewStates] = useState<Record<string, string>>(() => getAllObservationReviewStates());
+  const [pinnedIds, setPinnedIds] = useState<string[]>(() => getPinnedObservations());
   const [expandedObsId, setExpandedObsId] = useState<string | null>(null);
   const [modalObs, setModalObs] = useState<Observation | null>(null);
 
   useEffect(() => {
     const syncStates = () => {
       setReviewStates(getAllObservationReviewStates());
+      setPinnedIds(getPinnedObservations());
     };
     window.addEventListener(REVIEW_EVENT_CUSTOM_TYPE, syncStates);
     return () => {
@@ -75,6 +80,7 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
       morphology_probs: [{ label: rec.morphology, probability: rec.confidence }],
       is_demo: false,
       is_live: true,
+      image_key: rec.image_key || `IMG-${rec.observation_id}`,
       triage_response: rec.triage_response
     }));
 
@@ -92,6 +98,7 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
     const pendingReviewCount = allObservations.filter((o) => (reviewStates[o.id] || 'UNREVIEWED') === 'REVIEW_PENDING').length;
     const approvedCount = allObservations.filter((o) => reviewStates[o.id] === 'APPROVED').length;
     const deepAnalysisCount = allObservations.filter((o) => reviewStates[o.id] === 'DEEP_ANALYSIS_REQUESTED').length;
+    const pinnedCount = allObservations.filter((o) => pinnedIds.includes(o.id)).length;
 
     return {
       totalCount,
@@ -101,9 +108,10 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
       lowCount,
       pendingReviewCount,
       approvedCount,
-      deepAnalysisCount
+      deepAnalysisCount,
+      pinnedCount
     };
-  }, [allObservations, reviewStates]);
+  }, [allObservations, reviewStates, pinnedIds]);
 
   // Filtered and sorted queue items
   const filteredObservations = useMemo(() => {
@@ -113,6 +121,7 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
           return false;
         }
         const state = reviewStates[obs.id] || 'UNREVIEWED';
+        if (reviewFilter === 'PINNED' && !pinnedIds.includes(obs.id)) return false;
         if (reviewFilter === 'REVIEW_PENDING' && state !== 'REVIEW_PENDING') return false;
         if (reviewFilter === 'APPROVED' && state !== 'APPROVED') return false;
         if (reviewFilter === 'DEEP_ANALYSIS' && state !== 'DEEP_ANALYSIS_REQUESTED') return false;
@@ -123,7 +132,7 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
         if (sortBy === 'confidence') return (b.confidence ?? 0) - (a.confidence ?? 0);
         return new Date(b.observation_time).getTime() - new Date(a.observation_time).getTime();
       });
-  }, [allObservations, priorityFilter, reviewFilter, sortBy, reviewStates]);
+  }, [allObservations, priorityFilter, reviewFilter, sortBy, reviewStates, pinnedIds]);
 
   const toggleExpand = (obsId: string) => {
     setExpandedObsId(expandedObsId === obsId ? null : obsId);
@@ -267,6 +276,7 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
           <span className="text-xs font-mono text-slate-400">HUMAN REVIEW STATUS:</span>
           {[
             { key: 'ALL', label: 'ALL' },
+            { key: 'PINNED', label: `PINNED FOR REVIEW (${metrics.pinnedCount})` },
             { key: 'REVIEW_PENDING', label: `REVIEW PENDING (${metrics.pendingReviewCount})` },
             { key: 'APPROVED', label: `APPROVED (${metrics.approvedCount})` },
             { key: 'DEEP_ANALYSIS', label: `DEEP ANALYSIS (${metrics.deepAnalysisCount})` }
@@ -321,6 +331,7 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
                 {filteredObservations.map((obs) => {
                   const rState = reviewStates[obs.id] || 'UNREVIEWED';
                   const isExpanded = expandedObsId === obs.id;
+                  const isPinned = pinnedIds.includes(obs.id);
 
                   const triageInput = {
                     score: obs.anomaly_score,
@@ -345,9 +356,8 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
                         {/* ID + Thumbnail */}
                         <td className="p-3.5 font-bold text-white">
                           <div className="flex items-center gap-3">
-                            <img
-                              src={obs.image_url}
-                              alt={obs.id}
+                            <ObservationImage
+                              observation={obs}
                               className="w-10 h-10 rounded object-cover border border-slate-700 bg-black shrink-0"
                             />
                             <div>
@@ -392,19 +402,27 @@ export const AnomalyQueuePage: React.FC<AnomalyQueuePageProps> = ({ onInspectObs
 
                         {/* Review Status */}
                         <td className="p-3.5">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
-                              rState === 'APPROVED'
-                                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50'
-                                : rState === 'DEEP_ANALYSIS_REQUESTED'
-                                ? 'bg-indigo-950/80 text-indigo-300 border-indigo-500/50'
-                                : rState === 'REVIEW_PENDING'
-                                ? 'bg-amber-950/80 text-amber-300 border-amber-500/50'
-                                : 'bg-slate-900 text-slate-400 border-slate-800'
-                            }`}
-                          >
-                            {rState.replace(/_/g, ' ')}
-                          </span>
+                          <div className="flex flex-col gap-1 items-start">
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                                rState === 'APPROVED'
+                                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50'
+                                  : rState === 'DEEP_ANALYSIS_REQUESTED'
+                                  ? 'bg-indigo-950/80 text-indigo-300 border-indigo-500/50'
+                                  : rState === 'REVIEW_PENDING'
+                                  ? 'bg-amber-950/80 text-amber-300 border-amber-500/50'
+                                  : 'bg-slate-900 text-slate-400 border-slate-800'
+                              }`}
+                            >
+                              {rState.replace(/_/g, ' ')}
+                            </span>
+                            {isPinned && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-500/50 uppercase tracking-wider flex items-center gap-1">
+                                <Bookmark className="w-3 h-3 text-amber-400 shrink-0" />
+                                PINNED FOR REVIEW
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Actions */}

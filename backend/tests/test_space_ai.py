@@ -156,3 +156,120 @@ def test_space_ai_endpoint():
     assert data["scope"] == "astronomy_general"
     assert "spiral" in data["answer"].lower()
 
+# 8. Anomaly Grounding & Triage Math
+def test_space_ai_what_is_an_anomaly():
+    service = SpaceAIService()
+    res = service.answer_question("What do we mean by anomaly?")
+    assert res["scope"] in ("astra_product", "astronomy_general")
+    assert "0.35" in res["answer"]
+    assert "novelty" in res["answer"].lower()
+    assert "not" in res["answer"].lower() and "alien" in res["answer"].lower()
+
+def test_space_ai_target_followup_star():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "LIVE-20260920-STAR01",
+        "predicted_object_type": "Star",
+        "confidence": 0.92,
+        "broad_morphology": "OTHER",
+        "triage": {"priority": "MEDIUM", "anomaly_score": 0.55}
+    }
+    res = service.answer_question("Why is this a star?", observation_context=ctx)
+    assert res["scope"] == "observation_analysis"
+    assert "LIVE-20260920-STAR01" in res["answer"]
+    assert "Star" in res["answer"] or "point-source" in res["answer"].lower()
+
+def test_space_ai_deep_analysis_auto_request():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "LIVE-20260920-GAL99",
+        "predicted_object_type": "Galaxy",
+        "confidence": 0.89,
+        "broad_morphology": "SPIRAL",
+        "gz2class": "SBb",
+        "triage": {"priority": "HIGH", "anomaly_score": 0.78, "novelty_score": 0.80, "uncertainty_score": 0.70, "oddity_score": 0.85}
+    }
+    res = service.answer_question("Provide a detailed scientific explanation of observation LIVE-20260920-GAL99.", observation_context=ctx)
+    assert res["scope"] == "observation_analysis"
+    assert "LIVE-20260920-GAL99" in res["answer"]
+    assert "SPIRAL" in res["answer"]
+    assert "0.78" in res["answer"] or "HIGH" in res["answer"]
+
+# 9. Exact User Phrase "more details" & Multi-Turn Conversation
+def test_space_ai_exact_phrase_more_details():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "OBS-9FDBEE21",
+        "predicted_object_type": "Galaxy",
+        "confidence": 0.88,
+        "broad_morphology": "SPIRAL",
+        "triage": {"priority": "HIGH", "anomaly_score": 0.82, "novelty_score": 0.85, "uncertainty_score": 0.75, "oddity_score": 0.80}
+    }
+    res = service.answer_question("more details", observation_context=ctx)
+    assert res["scope"] == "observation_analysis"
+    assert "OBS-9FDBEE21" in res["answer"]
+    assert "I can help with astronomy" not in res["answer"]
+    assert "Detailed Evidence Breakdown" in res["answer"] or "Triage" in res["answer"]
+
+def test_space_ai_multi_turn_conversation_sequence():
+    service = SpaceAIService()
+    ctx = {
+        "observation_id": "OBS-TEST-001",
+        "predicted_object_type": "Galaxy",
+        "confidence": 0.91,
+        "broad_morphology": "SPIRAL",
+        "gz2class": "Sc",
+        "triage": {"priority": "CRITICAL", "anomaly_score": 0.92, "novelty_score": 0.94, "uncertainty_score": 0.88, "oddity_score": 0.90}
+    }
+
+    # TURN 1: Initial Deep Analysis Auto-Request
+    res1 = service.answer_question("Provide a detailed scientific explanation of this observation.", observation_context=ctx)
+    assert res1["scope"] == "observation_analysis"
+    assert "OBS-TEST-001" in res1["answer"]
+
+    # TURN 2: Follow-up "more details"
+    history = [
+        {"role": "user", "content": "Provide a detailed scientific explanation of this observation."},
+        {"role": "assistant", "content": res1["answer"]}
+    ]
+    res2 = service.answer_question("more details", observation_context=ctx, conversation_history=history)
+    assert res2["scope"] == "observation_analysis"
+    assert "OBS-TEST-001" in res2["answer"]
+    assert "I can help with astronomy, space science" not in res2["answer"]
+
+    # TURN 3: Follow-up "why was it prioritized?"
+    history.append({"role": "user", "content": "more details"})
+    history.append({"role": "assistant", "content": res2["answer"]})
+    res3 = service.answer_question("why was it prioritized?", observation_context=ctx, conversation_history=history)
+    assert res3["scope"] == "observation_analysis"
+    assert "OBS-TEST-001" in res3["answer"]
+
+    # TURN 4: Follow-up "could it be a quasar?"
+    history.append({"role": "user", "content": "why was it prioritized?"})
+    history.append({"role": "assistant", "content": res3["answer"]})
+    res4 = service.answer_question("could it be a quasar?", observation_context=ctx, conversation_history=history)
+    assert res4["scope"] == "observation_analysis"
+    assert "OBS-TEST-001" in res4["answer"]
+
+    # TURN 5: Follow-up "what evidence would confirm that?"
+    history.append({"role": "user", "content": "could it be a quasar?"})
+    history.append({"role": "assistant", "content": res4["answer"]})
+    res5 = service.answer_question("what evidence would confirm that?", observation_context=ctx, conversation_history=history)
+    assert res5["scope"] == "observation_analysis"
+
+    # TURN 6: General Astronomy "What is a neutron star?"
+    history.append({"role": "user", "content": "what evidence would confirm that?"})
+    history.append({"role": "assistant", "content": res5["answer"]})
+    res6 = service.answer_question("What is a neutron star?", observation_context=ctx, conversation_history=history)
+    assert res6["scope"] == "astronomy_general"
+    assert "neutron star" in res6["answer"].lower()
+
+    # TURN 7: Off-Topic "Who won the football match?"
+    history.append({"role": "user", "content": "What is a neutron star?"})
+    history.append({"role": "assistant", "content": res6["answer"]})
+    res7 = service.answer_question("Who won the football match?", observation_context=ctx, conversation_history=history)
+    assert res7["scope"] == "redirect"
+    assert "astronomy" in res7["answer"].lower()
+
+
+

@@ -192,15 +192,35 @@ class ObjectIdentificationService:
             evidence.append(f"Extended astronomical light distribution (Extended score: {ext_score:.2f}, FWHM: {fwhm:.1f}px)")
             evidence.append(f"Central galactic core matched stellar/AGN prompt ({top_score:.2f}), but image structural analysis confirms extended galaxy profile")
 
-        # 2. Compact Point Source (STAR / QUASAR Guardrail):
-        # Visually unresolved point sources cannot distinguish star from quasar in optical imaging without spectroscopy.
+        # 2. STAR candidate:
+        # OpenCLIP top_class == "STAR", compact point source profile, top_score >= 0.22, margin >= 0.05
+        elif top_class == "STAR" and (is_pt or pt_score >= 0.45 or compactness >= 0.50 or fwhm < 18.0) and top_score >= 0.22 and margin >= 0.05:
+            pred_type = "STAR"
+            status = "EXPERIMENTAL_VISUAL_EVIDENCE"
+            evidence_quality = "STRONG" if (pt_score >= 0.60 and margin >= 0.10) else "MODERATE"
+            evidence_sources = ["Image structural analysis", "OpenCLIP zero-shot"]
+            evidence.append(f"Point-like stellar light profile detected (Compactness: {compactness:.2f}, FWHM: {fwhm:.1f}px)")
+            evidence.append(f"Visual similarity profile matches star candidate ({top_score:.2f}, margin: {margin:.2f})")
+
+        # 3. QUASAR candidate:
+        # OpenCLIP top_class == "QUASAR", compact point source profile, top_score >= 0.22, margin >= 0.05
+        elif top_class == "QUASAR" and (is_pt or pt_score >= 0.45 or compactness >= 0.50 or fwhm < 18.0) and top_score >= 0.22 and margin >= 0.05:
+            pred_type = "QUASAR_CANDIDATE"
+            status = "EXPERIMENTAL_VISUAL_EVIDENCE"
+            evidence_quality = "MODERATE"
+            evidence_sources = ["Image structural analysis", "OpenCLIP zero-shot"]
+            evidence.append(f"Compact point-like AGN profile detected (Compactness: {compactness:.2f}, FWHM: {fwhm:.1f}px)")
+            evidence.append(f"Visual similarity profile matches quasar candidate ({top_score:.2f}, margin: {margin:.2f})")
+
+        # 4. Compact Point Source (STAR / QUASAR Guardrail):
+        # Visually unresolved point sources with ambiguous decision margins (< 0.05) or low confidence (< 0.22)
         elif top_class in ("STAR", "QUASAR") or is_pt or pt_score >= 0.55 or fwhm < 15.0:
             pred_type = "AMBIGUOUS_POINT_SOURCE"
             status = "INSUFFICIENT_VISUAL_EVIDENCE"
             evidence_quality = "INSUFFICIENT"
             evidence_sources = ["Image structural analysis", "OpenCLIP zero-shot"]
             evidence.append(f"Point-like astronomical source detected (Compactness: {compactness:.2f}, FWHM: {fwhm:.1f}px)")
-            evidence.append("Visual imaging alone does not provide enough evidence to reliably distinguish a star from a quasar without spectroscopic redshift or multi-band catalog match")
+            evidence.append("Visual imaging alone does not provide enough margin to reliably separate star vs quasar hypotheses without spectroscopic or catalog data")
 
         # 3. NEBULA candidate: requires OpenCLIP top_class == "NEBULA" AND structural diffuse emission evidence
         elif top_class == "NEBULA":

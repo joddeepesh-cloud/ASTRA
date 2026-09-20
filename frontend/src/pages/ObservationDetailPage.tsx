@@ -5,24 +5,34 @@ import { ConfidenceBar } from '../components/ConfidenceBar';
 import { TriageExplanation } from '../components/TriageExplanation';
 import { EvidenceEnrichmentPanel } from '../components/EvidenceEnrichmentPanel';
 
+import { useObservationImage } from '../hooks/useObservationImage';
 import {
   getObservationReviewState,
   recordReviewEvent,
+  pinObservation,
   REVIEW_EVENT_CUSTOM_TYPE,
   type ReviewState
 } from '../services/reviewEventsService';
-import { ArrowLeft, CheckCircle2, AlertOctagon, UserCheck, Shield, FileSearch } from 'lucide-react';
-
+import { ArrowLeft, CheckCircle2, AlertOctagon, UserCheck, Shield, Bot, Bookmark, ArrowRight, X } from 'lucide-react';
 
 interface ObservationDetailPageProps {
   observation: Observation;
   onBack: () => void;
+  onAskAI?: (observation: Observation) => void;
+  onPinToQueue?: (observation: Observation) => void;
 }
 
-export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ observation, onBack }) => {
+export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({
+  observation,
+  onBack,
+  onAskAI,
+  onPinToQueue
+}) => {
   const [reviewState, setReviewState] = useState<ReviewState>(() =>
     getObservationReviewState(observation.id)
   );
+  const [showChoiceModal, setShowChoiceModal] = useState<boolean>(false);
+  const { imageUrl: resolvedImageUrl, isFallback } = useObservationImage(observation);
 
   useEffect(() => {
     // Sync review state whenever observation changes or custom review event triggers
@@ -38,12 +48,16 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ ob
     };
   }, [observation.id]);
 
-  const handleAction = (action: 'HUMAN_REVIEW' | 'APPROVE' | 'DEEP_ANALYSIS') => {
+  const handleAction = (action: 'APPROVE' | 'DEEP_ANALYSIS') => {
     const { state } = recordReviewEvent(observation.id, action, {
       priority: observation.priority,
       morphology: observation.broad_morphology
     });
     setReviewState(state);
+
+    if (action === 'DEEP_ANALYSIS') {
+      setShowChoiceModal(true);
+    }
   };
 
   const isLive = observation.is_live;
@@ -99,9 +113,9 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ ob
         <div className="lg:col-span-6 space-y-6">
           <div className="glass-panel p-4 rounded-xl border border-[#252D37] bg-[#070B11]/90 relative overflow-hidden">
             <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-black border border-slate-800 flex items-center justify-center">
-              {observation.image_url && !imageError ? (
+              {resolvedImageUrl && !imageError && !isFallback ? (
                 <img
-                  src={observation.image_url}
+                  src={resolvedImageUrl}
                   alt={observation.id}
                   className="w-full h-full object-cover"
                   onError={() => setImageError(true)}
@@ -279,44 +293,31 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ ob
               </span>
             </div>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button
-                onClick={() => handleAction('HUMAN_REVIEW')}
-                disabled={reviewState === 'REVIEW_PENDING'}
-                className={`py-2.5 px-3 rounded font-mono text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
-                  reviewState === 'REVIEW_PENDING'
-                    ? 'bg-amber-950/60 text-amber-300 border-amber-500/50 shadow-md'
-                    : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <FileSearch className="w-3.5 h-3.5" />
-                {reviewState === 'REVIEW_PENDING' ? 'REVIEW PENDING' : 'HUMAN REVIEW'}
-              </button>
-
+            {/* Action Buttons (Strictly 2 balanced buttons: APPROVE & DEEP ANALYSIS) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 onClick={() => handleAction('APPROVE')}
                 disabled={reviewState === 'APPROVED'}
-                className={`py-2.5 px-3 rounded font-mono text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                className={`py-3 px-4 rounded font-mono text-xs font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
                   reviewState === 'APPROVED'
                     ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-950'
-                    : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-emerald-950 hover:text-emerald-200'
+                    : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-emerald-950 hover:text-emerald-200 hover:border-emerald-500/50'
                 }`}
               >
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-4 h-4" />
                 {reviewState === 'APPROVED' ? 'APPROVED' : 'APPROVE'}
               </button>
 
               <button
                 onClick={() => handleAction('DEEP_ANALYSIS')}
                 disabled={reviewState === 'DEEP_ANALYSIS_REQUESTED'}
-                className={`py-2.5 px-3 rounded font-mono text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                className={`py-3 px-4 rounded font-mono text-xs font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
                   reviewState === 'DEEP_ANALYSIS_REQUESTED'
                     ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-950'
-                    : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-indigo-950 hover:text-indigo-200'
+                    : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-indigo-950 hover:text-indigo-200 hover:border-indigo-500/50'
                 }`}
               >
-                <AlertOctagon className="w-3.5 h-3.5" />
+                <AlertOctagon className="w-4 h-4" />
                 {reviewState === 'DEEP_ANALYSIS_REQUESTED' ? 'DEEP ANALYSIS' : 'DEEP ANALYSIS'}
               </button>
             </div>
@@ -330,7 +331,7 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ ob
                 </div>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
                   {reviewState === 'APPROVED' && `ASTRA recorded your approval for observation ${observation.id} for continued scientific workflow.`}
-                  {reviewState === 'DEEP_ANALYSIS_REQUESTED' && `ASTRA recorded observation ${observation.id} for deeper scientific follow-up.`}
+                  {reviewState === 'DEEP_ANALYSIS_REQUESTED' && `Observation ${observation.id} has been flagged for further scientific analysis.`}
                   {reviewState === 'REVIEW_PENDING' && `Observation ${observation.id} is queued in ASTRA for human scientific review.`}
                 </p>
               </div>
@@ -338,6 +339,84 @@ export const ObservationDetailPage: React.FC<ObservationDetailPageProps> = ({ ob
           </div>
         </div>
       </div>
+
+      {/* DEEP ANALYSIS CHOICE MODAL OVERLAY */}
+      {showChoiceModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-[#090D14] border border-[#21133B] rounded-2xl p-6 space-y-6 shadow-2xl text-[#ECEAF2]">
+            {/* Header with Close X */}
+            <div className="flex items-start justify-between border-b border-[#21133B] pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <AlertOctagon className="w-5 h-5 text-indigo-400" />
+                  <h3 className="text-lg font-bold font-serif-display text-white tracking-wider">
+                    Further Analysis Required
+                  </h3>
+                </div>
+                <p className="text-xs text-[#8E8A9D] font-sans-ui">
+                  ASTRA has flagged this observation for deeper investigation. Choose how you want to continue.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowChoiceModal(false)}
+                className="p-1.5 rounded-lg bg-[#15102A] text-slate-400 hover:text-white border border-[#21133B] transition-colors cursor-pointer"
+                title="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Choice Buttons */}
+            <div className="space-y-4">
+              {/* Choice 1: ASK ASTRA AI */}
+              <button
+                onClick={() => {
+                  setShowChoiceModal(false);
+                  if (onAskAI) {
+                    onAskAI(observation);
+                  }
+                }}
+                className="w-full text-left p-4 rounded-xl bg-[#15102A] hover:bg-[#21133B] border border-[#9B7FD4]/40 hover:border-[#9B7FD4] transition-all group cursor-pointer space-y-1.5 shadow-md"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs font-bold text-[#8FD3FF] group-hover:text-white flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-[#8FD3FF]" />
+                    [ ASK ASTRA AI ]
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-[#8E8A9D] group-hover:text-white group-hover:translate-x-1 transition-transform" />
+                </div>
+                <p className="text-xs text-[#8E8A9D] group-hover:text-slate-200 font-sans-ui leading-relaxed">
+                  Open this observation in ASTRA Space Help AI for a detailed scientific explanation and follow-up questions.
+                </p>
+              </button>
+
+              {/* Choice 2: ADD TO ANOMALY QUEUE */}
+              <button
+                onClick={() => {
+                  setShowChoiceModal(false);
+                  pinObservation(observation.id);
+                  if (onPinToQueue) {
+                    onPinToQueue(observation);
+                  }
+                }}
+                className="w-full text-left p-4 rounded-xl bg-[#15102A] hover:bg-[#21133B] border border-[#9B7FD4]/40 hover:border-[#9B7FD4] transition-all group cursor-pointer space-y-1.5 shadow-md"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs font-bold text-amber-300 group-hover:text-amber-200 flex items-center gap-2">
+                    <Bookmark className="w-4 h-4 text-amber-400" />
+                    [ ADD TO ANOMALY QUEUE ]
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-[#8E8A9D] group-hover:text-white group-hover:translate-x-1 transition-transform" />
+                </div>
+                <p className="text-xs text-[#8E8A9D] group-hover:text-slate-200 font-sans-ui leading-relaxed">
+                  Pin this observation to the Anomaly Queue for further investigation.
+                </p>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

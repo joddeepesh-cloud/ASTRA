@@ -21,10 +21,10 @@ def test_galaxy_zoo_output_alone_cannot_produce_galaxy():
     pt_arr += 230.0 * np.exp(-r2 / (2 * 1.5**2))
     pt_pil = Image.fromarray(np.clip(pt_arr, 0, 255).astype(np.uint8)).convert("RGB")
 
-    # Object identification service must return point source / ambiguous, NOT GALAXY
+    # Object identification service must return point source / STAR / ambiguous, NOT GALAXY
     res = ml_service.object_id_service.classify_pil_image(pt_pil, filename="compact_star.jpg")
     assert res["predicted_object_type"] != "GALAXY"
-    assert res["predicted_object_type"] in ["AMBIGUOUS_POINT_SOURCE", "ASTRONOMICAL_SOURCE_AMBIGUOUS"]
+    assert res["predicted_object_type"] in ["STAR", "QUASAR_CANDIDATE", "AMBIGUOUS_POINT_SOURCE", "ASTRONOMICAL_SOURCE_AMBIGUOUS"]
 
 def test_non_galaxy_does_not_become_galaxy_from_gz_morphology():
     """Verify non-galaxy point source cutout sent to ml_service.analyze_image does NOT become GALAXY."""
@@ -40,7 +40,7 @@ def test_non_galaxy_does_not_become_galaxy_from_gz_morphology():
     out = ml_service.analyze_image(buf.getvalue(), filename="star_point_source.jpg")
     if out["domain_validation"]["decision"] == "COMPATIBLE":
         assert out["predicted_object_type"] != "GALAXY"
-        assert out["predicted_object_type"] in ["AMBIGUOUS_POINT_SOURCE", "ASTRONOMICAL_SOURCE_AMBIGUOUS"]
+        assert out["predicted_object_type"] in ["STAR", "QUASAR_CANDIDATE", "AMBIGUOUS_POINT_SOURCE", "ASTRONOMICAL_SOURCE_AMBIGUOUS"]
         assert out["morphology"] is None
         assert out["morphology_info"]["status"] == "NOT_APPLICABLE"
 
