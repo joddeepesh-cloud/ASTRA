@@ -101,7 +101,7 @@ class ObjectIdentificationService:
         second_class = None
         margin = 0.0
 
-        if self.semantic_gate is not None and getattr(self.semantic_gate, "model", None) is not None:
+        if self.semantic_gate is not None and getattr(self.semantic_gate, "model", None) is not None and getattr(self.semantic_gate, "tokenizer", None) is not None:
             try:
                 device = self.semantic_gate.device
                 model = self.semantic_gate.model

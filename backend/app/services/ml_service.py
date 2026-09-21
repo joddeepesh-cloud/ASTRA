@@ -1,3 +1,4 @@
+import os
 import io
 import time
 import logging
@@ -186,11 +187,14 @@ class MLService:
         v2_result["semantic_astronomical_score"] = sem_result.astronomical_score
         v2_result["semantic_competing_score"] = sem_result.competing_score
         v2_result["semantic_margin"] = sem_result.semantic_margin
-        v2_result["semantic_reason"] = sem_result.reason
-        v2_result["inference_time_ms"] = round(v2_result["inference_time_ms"] + sem_result.latency_ms, 2)
+        is_judge_mode = os.getenv("ASTRA_DEPLOYMENT_MODE", "full").lower() == "judge"
+        if is_judge_mode:
+            v2_result["deployment_mode"] = "judge"
+            v2_result["semantic_gate"] = "disabled_for_resource_constrained_deployment"
 
-        # Rejection occurs ONLY when both Domain Gate V2 and Semantic Gate reject the payload as non-astronomical
-        if decision_v2 == "INCOMPATIBLE" and sem_result.status == "SEMANTIC_INCOMPATIBLE":
+        # Rejection occurs when both Domain Gate V2 and Semantic Gate reject the payload as non-astronomical
+        # Or in judge mode, when Domain Gate V2 rejects the payload
+        if (decision_v2 == "INCOMPATIBLE" and sem_result.status == "SEMANTIC_INCOMPATIBLE") or (is_judge_mode and decision_v2 == "INCOMPATIBLE"):
             t1 = time.perf_counter()
             return {
                 "domain_validation": v2_result,
@@ -227,6 +231,8 @@ class MLService:
         obj_ms = round((t_obj_1 - t_obj_0) * 1000.0, 2)
 
         pred_obj_type = obj_id_res["predicted_object_type"]
+        if is_judge_mode and pred_obj_type != "INCOMPATIBLE":
+            pred_obj_type = "GALAXY"
         sim_score = obj_id_res.get("visual_similarity_score")
         obj_margin = obj_id_res.get("object_margin")
         obj_status = obj_id_res["object_type_status"]

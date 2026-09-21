@@ -47,6 +47,8 @@ class DomainGate:
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.model = self.model.to(self.device)
         self.model.eval()
+        for p in self.model.parameters():
+            p.requires_grad = False
         
         self.temperature = float(checkpoint.get('temperature', 1.4996))
         ckpt_version = str(checkpoint.get('model_version', 'mobilenet_v3_small_domain_gate_v2'))

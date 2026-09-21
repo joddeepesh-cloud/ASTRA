@@ -52,10 +52,14 @@ class GalaxyZooInference:
         self.model.load_state_dict(self.checkpoint["model_state_dict"])
         self.model.to(self.device)
         self.model.eval()
+        for p in self.model.parameters():
+            p.requires_grad = False
+        input_size = self.checkpoint.get("input_size", (224, 224))
+        norm_config = self.checkpoint.get("norm_config", {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]})
 
         # Define canonical image preprocessing
-        norm_config = self.checkpoint.get("normalization", {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]})
-        input_size = self.checkpoint.get("input_size", (224, 224))
+        if "model_state_dict" in self.checkpoint:
+            del self.checkpoint["model_state_dict"]
 
         self.transform = transforms.Compose([
             transforms.Resize(input_size),
