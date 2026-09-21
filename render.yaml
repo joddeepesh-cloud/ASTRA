@@ -8,6 +8,8 @@ services:
     buildCommand: pip install -r requirements-render-judge.txt
     startCommand: gunicorn -c deploy/gunicorn.conf.py backend.app.main:app
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
       - key: ASTRA_DEPLOYMENT_MODE
         value: "judge"
       - key: HF_HUB_OFFLINE
