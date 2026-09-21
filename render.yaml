@@ -17,7 +17,9 @@ services:
       - key: ASTRA_DEVICE
         value: "cpu"
       - key: ALLOWED_ORIGINS
-        value: '["https://3e63a302.astra-3ll.pages.dev", "https://bdb22d8c.astra-3ll.pages.dev", "https://astra-3ll.pages.dev", "https://astra.pages.dev", "http://localhost:5173"]'
+        value: '["https://f306b7ae.astra-3ll.pages.dev", "https://3e63a302.astra-3ll.pages.dev", "https://2ea36865.astra-3ll.pages.dev", "https://bdb22d8c.astra-3ll.pages.dev", "https://astra-3ll.pages.dev", "https://astra.pages.dev", "http://localhost:5173"]'
+      - key: ALLOW_ORIGIN_REGEX
+        value: "https://.*\\.astra-3ll\\.pages\\.dev"
       - key: FRONTEND_ORIGIN
-        value: "https://3e63a302.astra-3ll.pages.dev"
+        value: "https://f306b7ae.astra-3ll.pages.dev"
     healthCheckPath: /api/v1/health

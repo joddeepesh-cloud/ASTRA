@@ -29,7 +29,14 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5177",
         "http://127.0.0.1:5178",
         "http://127.0.0.1:5179",
+        "https://astra-3ll.pages.dev",
+        "https://astra.pages.dev",
+        "https://f306b7ae.astra-3ll.pages.dev",
+        "https://3e63a302.astra-3ll.pages.dev",
+        "https://2ea36865.astra-3ll.pages.dev",
+        "https://bdb22d8c.astra-3ll.pages.dev",
     ]
+    ALLOW_ORIGIN_REGEX: str = r"https://.*\.astra-3ll\.pages\.dev"
     MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB
     ALLOWED_IMAGE_TYPES: set[str] = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
     # Space Help AI Settings
