@@ -1,0 +1,19 @@
+# Render Blueprint Infrastructure-as-Code for ASTRA Backend
+services:
+  - type: web
+    name: astra-backend
+    runtime: python
+    plan: free
+    region: oregon # or ohio, frankfurt, singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -c deploy/gunicorn.conf.py backend.app.main:app
+    envVars:
+      - key: HF_HUB_OFFLINE
+        value: "1"
+      - key: ASTRA_DEVICE
+        value: "cpu"
+      - key: ALLOWED_ORIGINS
+        value: "https://2ea36865.astra-3ll.pages.dev,https://astra.pages.dev,http://localhost:5173"
+      - key: FRONTEND_ORIGIN
+        value: "https://2ea36865.astra-3ll.pages.dev"
+    healthCheckPath: /api/v1/health
