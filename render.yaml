@@ -3,7 +3,7 @@ services:
   - type: web
     name: astra-backend
     runtime: python
-    plan: free
+    plan: standard
     region: oregon # or ohio, frankfurt, singapore
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn -c deploy/gunicorn.conf.py backend.app.main:app
