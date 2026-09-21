@@ -36,7 +36,7 @@ class GalaxyZooInference:
             self.device = torch.device(device)
 
         # Load checkpoint
-        checkpoint = torch.load(model_path, map_location="cpu")
+        checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
         self.backbone_name = checkpoint.get("backbone", "efficientnet_b0")
         self.num_classes = checkpoint.get("num_classes", 4)
         self.idx_to_class = checkpoint.get("idx_to_class", IDX_TO_CLASS)

@@ -1,4 +1,5 @@
 import os
+import gc
 import time
 import json
 import numpy as np
@@ -28,14 +29,16 @@ class ASTRATriageEngine:
             raise FileNotFoundError(f"Triage reference artifact not found at: {reference_path}")
 
         with open(reference_path, "r") as f:
-            self.reference_data = json.load(f)
+            ref_data = json.load(f)
 
         self.centroids_normalized = {
             k: np.array(v, dtype=np.float32)
-            for k, v in self.reference_data["centroids_normalized"].items()
+            for k, v in ref_data["centroids_normalized"].items()
         }
-        self.norm_bounds = self.reference_data["normalization_bounds"]
-        self.priority_thresholds = self.reference_data["priority_thresholds"]
+        self.norm_bounds = ref_data["normalization_bounds"]
+        self.priority_thresholds = ref_data["priority_thresholds"]
+        del ref_data
+        gc.collect()
 
         if inference_engine is None:
             self.inference_engine = GalaxyZooInference()

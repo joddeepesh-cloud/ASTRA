@@ -59,6 +59,7 @@ ml/models/*
 # Generated Embeddings & Artifacts
 ml/artifacts/*
 !ml/artifacts/.gitkeep
+!ml/artifacts/triage_reference.json
 *.pkl
 *.joblib
 *.npz

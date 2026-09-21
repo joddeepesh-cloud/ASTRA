@@ -39,7 +39,7 @@ class DomainGate:
 
     def _load_model(self):
         t0 = time.time()
-        checkpoint = torch.load(self.model_path, map_location=self.device)
+        checkpoint = torch.load(self.model_path, map_location=self.device, weights_only=True)
         
         self.model = mobilenet_v3_small()
         in_features = self.model.classifier[3].in_features
