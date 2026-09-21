@@ -1,5 +1,6 @@
 import os
 import io
+import gc
 import time
 import torch
 import torch.nn as nn
@@ -55,6 +56,8 @@ class DomainGate:
         if "v2" not in ckpt_version:
             ckpt_version = "mobilenet_v3_small_domain_gate_v2"
         self.model_version = ckpt_version
+        del checkpoint
+        gc.collect()
         self.load_duration_ms = (time.time() - t0) * 1000.0
 
     def predict(self, image_input):

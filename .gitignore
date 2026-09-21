@@ -49,6 +49,8 @@ ml/models/*
 !ml/models/.gitkeep
 *.pth
 *.pt
+!ml/models/domain_gate_v2_best.pt
+!ml/models/best_model.pt
 *.bin
 *.onnx
 *.safetensors

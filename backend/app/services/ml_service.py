@@ -2,6 +2,7 @@ import os
 import io
 import time
 import logging
+import torch
 from PIL import Image, ImageOps
 import numpy as np
 
@@ -43,6 +44,8 @@ class MLService:
             return
 
         t0 = time.perf_counter()
+        if os.getenv("ASTRA_DEVICE", "cpu").lower() == "cpu" or not torch.cuda.is_available():
+            torch.set_num_threads(1)
         logger.info(f"Initializing MLService with Model: {settings.MODEL_PATH} and Domain Gate: {settings.DOMAIN_GATE_PATH}")
 
         # 1. Load Universal Semantic Gate (Stage 1)
@@ -65,7 +68,7 @@ class MLService:
             model_path=settings.MODEL_PATH
         )
         self.device_str = str(self.inference_engine.device)
-        ckpt_epoch = self.inference_engine.checkpoint.get("epoch", 10)
+        ckpt_epoch = getattr(self.inference_engine, "model_epoch", 10)
         self.model_version_str = f"galaxy-zoo-efficientnet-b0-epoch{ckpt_epoch}"
 
         # 4. Load Triage Engine
@@ -108,7 +111,7 @@ class MLService:
         t0 = time.perf_counter()
 
         if not self.is_ready:
-            raise RuntimeError("ML Service is not ready to process requests.")
+            self.initialize()
 
         if not file_bytes:
             raise ValueError("Empty file payload received.")

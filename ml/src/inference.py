@@ -1,4 +1,5 @@
 import os
+import gc
 import time
 import torch
 import torch.nn as nn
@@ -35,12 +36,13 @@ class GalaxyZooInference:
             self.device = torch.device(device)
 
         # Load checkpoint
-        self.checkpoint = torch.load(model_path, map_location="cpu")
-        self.backbone_name = self.checkpoint.get("backbone", "efficientnet_b0")
-        self.num_classes = self.checkpoint.get("num_classes", 4)
-        self.idx_to_class = self.checkpoint.get("idx_to_class", IDX_TO_CLASS)
-        self.attribute_cols = self.checkpoint.get("attribute_cols", ATTRIBUTE_COLS)
-        self.embedding_dim = self.checkpoint.get("embedding_dim", 1280)
+        checkpoint = torch.load(model_path, map_location="cpu")
+        self.backbone_name = checkpoint.get("backbone", "efficientnet_b0")
+        self.num_classes = checkpoint.get("num_classes", 4)
+        self.idx_to_class = checkpoint.get("idx_to_class", IDX_TO_CLASS)
+        self.attribute_cols = checkpoint.get("attribute_cols", ATTRIBUTE_COLS)
+        self.embedding_dim = checkpoint.get("embedding_dim", 1280)
+        self.model_epoch = checkpoint.get("epoch", 10)
 
         # Instantiate model architecture and load weights
         self.model = GalaxyZooMultiHeadCNN(
@@ -49,23 +51,23 @@ class GalaxyZooInference:
             num_attributes=len(self.attribute_cols),
             pretrained=False
         )
-        self.model.load_state_dict(self.checkpoint["model_state_dict"])
+        self.model.load_state_dict(checkpoint["model_state_dict"])
         self.model.to(self.device)
         self.model.eval()
         for p in self.model.parameters():
             p.requires_grad = False
-        input_size = self.checkpoint.get("input_size", (224, 224))
-        norm_config = self.checkpoint.get("norm_config", {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]})
+        input_size = checkpoint.get("input_size", (224, 224))
+        norm_config = checkpoint.get("norm_config", {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]})
 
         # Define canonical image preprocessing
-        if "model_state_dict" in self.checkpoint:
-            del self.checkpoint["model_state_dict"]
-
         self.transform = transforms.Compose([
             transforms.Resize(input_size),
             transforms.ToTensor(),
             transforms.Normalize(mean=norm_config["mean"], std=norm_config["std"])
         ])
+
+        del checkpoint
+        gc.collect()
 
     @torch.inference_mode()
     def predict_single_image(self, image_input) -> dict:

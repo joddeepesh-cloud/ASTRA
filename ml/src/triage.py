@@ -42,7 +42,8 @@ class ASTRATriageEngine:
         else:
             self.inference_engine = inference_engine
 
-        self.model_version = self.inference_engine.checkpoint.get("epoch", "Epoch 10")
+        epoch = getattr(self.inference_engine, "model_epoch", "10")
+        self.model_version = f"Epoch {epoch}"
 
     def triage_single_image(self, image_input) -> dict:
         """
